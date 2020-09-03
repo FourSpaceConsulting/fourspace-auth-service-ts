@@ -1,4 +1,4 @@
-import { TokenConverter } from "./token-converter";
+import { TokenConverter } from "./../token-converter";
 
 export class TokenConverterImpl implements TokenConverter {
   private readonly _keyLength: number;

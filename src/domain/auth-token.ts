@@ -1,11 +1,11 @@
-import { AuthUser } from "./auth-user";
-export interface AuthTokenSecure {
+import { Principal } from "./principal";
+export interface AuthTokenSecure<P> {
   readonly key: string;
   readonly hashToken: string;
   readonly created: Date;
-  readonly user: AuthUser;
+  readonly user: P;
 }
 
-export interface AuthToken extends AuthTokenSecure {
+export interface AuthToken<P> extends AuthTokenSecure<P> {
   readonly plainToken: string;
 }

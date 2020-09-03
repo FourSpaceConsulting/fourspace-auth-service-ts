@@ -1,4 +1,4 @@
-import { RandomStringGenerator } from "./random-string-generator";
+import { RandomStringGenerator } from "../random-string-generator";
 import SecureRandomString from "secure-random-string";
 
 export class RandomStringGeneratorImpl implements RandomStringGenerator {

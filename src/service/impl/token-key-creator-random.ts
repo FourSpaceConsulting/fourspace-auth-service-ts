@@ -1,11 +1,11 @@
-import { TokenKeyCreator } from "./token-key-creator";
-import { AuthUser } from "../domain/auth-user";
-import { RandomStringGenerator } from "./random-string-generator";
+import { TokenKeyCreator } from "./../token-key-creator";
+import { RandomStringGenerator } from "./../random-string-generator";
+import { UserSecurityContext } from "../../domain/security-context";
 
 /**
  * Implementation that generates a random key
  */
-export class TokenKeyCreatorRandom implements TokenKeyCreator {
+export class TokenKeyCreatorRandom<P> implements TokenKeyCreator<P> {
   private readonly _randomStringGenerator: RandomStringGenerator;
   private readonly _keyLength: number;
 
@@ -14,7 +14,7 @@ export class TokenKeyCreatorRandom implements TokenKeyCreator {
     this._keyLength = keyLength;
   }
 
-  public createKey(user: AuthUser): Promise<string> {
+  public createKey(context: UserSecurityContext<P>): Promise<string> {
     return this._randomStringGenerator.generateRandom(this._keyLength);
   }
 }

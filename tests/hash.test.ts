@@ -1,13 +1,4 @@
-import { SecureHashImpl } from '../src/service/secure-hash-impl';
-import { TokenCreatorImpl } from '../src/service/token-creator-impl';
-import { TokenAuthenticatorImpl } from '../src/service/token-authenticator-impl';
-import { RandomStringGenerator } from '../src/service/random-string-generator';
-import { RandomStringGeneratorImpl } from '../src/service/random-string-generator-impl';
-import { TokenConverterImpl } from '../src/service/token-converter-impl';
-import { DateProvider } from '../src/service/date-provider';
-import { TokenDao } from '../src/dao/token-dao';
-import { AuthToken, AuthTokenSecure } from '../src/domain/auth-token';
-import moment from 'moment';
+import { SecureHashImpl } from '../src/service/impl/secure-hash-impl';
 
 describe('Test Secure Hash Implementation', () => {
 

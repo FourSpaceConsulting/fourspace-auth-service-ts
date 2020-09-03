@@ -1,5 +1,6 @@
-import { AuthUser } from "../domain/auth-user";
+import { Principal } from "../domain/principal";
+import { UserSecurityContext } from "../domain/security-context";
 
-export interface TokenKeyCreator {
-  createKey(user: AuthUser): Promise<string>;
+export interface TokenKeyCreator<P> {
+  createKey(user: UserSecurityContext<P>): Promise<string>;
 }

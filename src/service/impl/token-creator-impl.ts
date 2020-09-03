@@ -1,18 +1,18 @@
-import { TokenCreator } from "./token-creator";
-import { AuthUser } from "../domain/auth-user";
-import { SecureHash } from "./secure-hash";
-import { RandomStringGenerator } from "./random-string-generator";
-import { DateProvider } from "./date-provider";
-import { AuthToken } from "../domain/auth-token";
-import { TokenKeyCreator } from "./token-key-creator";
+import { TokenCreator } from "../token-creator";
+import { SecureHash } from "./../secure-hash";
+import { RandomStringGenerator } from "./../random-string-generator";
+import { DateProvider } from "./../date-provider";
+import { AuthToken } from "../../domain/auth-token";
+import { TokenKeyCreator } from "./../token-key-creator";
+import { UserSecurityContext } from "../../domain/security-context";
 
 /**
  * Token creator implementation
  */
-export class TokenCreatorImpl implements TokenCreator {
+export class TokenCreatorImpl<P> implements TokenCreator<P> {
   private readonly _secureHash: SecureHash;
   private readonly _randomStringGenerator: RandomStringGenerator;
-  private readonly _tokenKeyCreator: TokenKeyCreator;
+  private readonly _tokenKeyCreator: TokenKeyCreator<P>;
   private readonly _dateProvider: DateProvider;
   private readonly _tokenInputLength: number;
 
@@ -25,7 +25,7 @@ export class TokenCreatorImpl implements TokenCreator {
    * @param tokenInputLength
    */
   constructor(
-    _tokenKeyCreator: TokenKeyCreator,
+    _tokenKeyCreator: TokenKeyCreator<P>,
     secureHash: SecureHash,
     randomStringGenerator: RandomStringGenerator,
     dateProvider: DateProvider,
@@ -38,8 +38,11 @@ export class TokenCreatorImpl implements TokenCreator {
     this._tokenInputLength = tokenInputLength;
   }
 
-  public async createAuthenticationToken(user: AuthUser): Promise<AuthToken> {
-    const key = await this._tokenKeyCreator.createKey(user);
+  public async createAuthenticationToken(
+    context: UserSecurityContext<P>
+  ): Promise<AuthToken<P>> {
+    const user = context.principal;
+    const key = await this._tokenKeyCreator.createKey(context);
     const plainToken = await this._randomStringGenerator.generateRandom(
       this._tokenInputLength
     );

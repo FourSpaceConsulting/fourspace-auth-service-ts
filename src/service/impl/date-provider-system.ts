@@ -1,4 +1,4 @@
-import { DateProvider } from "./date-provider";
+import { DateProvider } from "../date-provider";
 
 import moment from "moment";
 

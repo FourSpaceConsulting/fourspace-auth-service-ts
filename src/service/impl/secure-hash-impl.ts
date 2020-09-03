@@ -1,5 +1,5 @@
 import SecurePassword from "secure-password";
-import { SecureHash } from "./secure-hash";
+import { SecureHash } from "../secure-hash";
 
 export class SecureHashImpl implements SecureHash {
   private readonly securePassword: SecurePassword;

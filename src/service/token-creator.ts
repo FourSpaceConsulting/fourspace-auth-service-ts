@@ -1,5 +1,5 @@
-﻿import { AuthUser } from '../domain/auth-user';
-import { AuthToken } from '../domain/auth-token';
+﻿import { AuthUser } from "../domain/auth-user";
+import { AuthToken } from "../domain/auth-token";
 
 /**
  * Creates auth tokens

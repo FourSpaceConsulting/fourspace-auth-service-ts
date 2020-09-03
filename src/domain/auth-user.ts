@@ -1,3 +1,3 @@
 export interface AuthUser {
-    username: string;
+  username: string;
 }

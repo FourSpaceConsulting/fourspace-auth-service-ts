@@ -6,7 +6,7 @@ import { AuthToken, AuthTokenSecure } from "../domain/auth-token";
 export interface PrincipalDao<P> {
   /**
    * get auth token given the unique id
-   * @param key unique id
+   * @param username unique id
    */
-  getPrincipal(key: string): Promise<P>;
+  getPrincipal(username: string): Promise<P>;
 }

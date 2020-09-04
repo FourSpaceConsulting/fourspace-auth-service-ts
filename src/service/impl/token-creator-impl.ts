@@ -2,7 +2,7 @@ import { TokenCreator } from "../token-creator";
 import { SecureHash } from "./../secure-hash";
 import { RandomStringGenerator } from "./../random-string-generator";
 import { DateProvider } from "./../date-provider";
-import { AuthToken } from "../../domain/auth-token";
+import { AuthToken, TokenType } from "../../domain/auth-token";
 import { TokenKeyCreator } from "./../token-key-creator";
 import { UserSecurityContext } from "../../domain/security-context";
 
@@ -48,6 +48,15 @@ export class TokenCreatorImpl<P> implements TokenCreator<P> {
     );
     const hashToken = await this._secureHash.createHash(plainToken);
     const created = this._dateProvider.getDateTime();
-    return { key, plainToken, hashToken, created, user };
+    const expiry = this._dateProvider.getDateTime();
+    return {
+      tokenType: TokenType.UserToken,
+      key,
+      plainToken,
+      hashToken,
+      user,
+      created,
+      expiry
+    };
   }
 }

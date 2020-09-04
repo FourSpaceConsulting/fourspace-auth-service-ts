@@ -3,7 +3,7 @@ import { TokenCreatorImpl } from './../src/service/impl/token-creator-impl';
 import { TokenAuthenticatorImpl } from './../src/service/impl/token-authenticator-impl';
 import { TokenKeyCreatorRandom } from './../src/service/impl/token-key-creator-random';
 import { RandomStringGeneratorImpl } from '../src/service/impl/random-string-generator-impl';
-import { TokenConverterImpl } from './../src/service/impl/token-converter-impl';
+import { TokenEncoderStringSeparated } from '../src/service/impl/token-encoder-string-separated';
 import { DateProvider } from '../src/service/date-provider';
 import { TokenDao } from '../src/dao/token-dao';
 import { AuthToken, AuthTokenSecure } from '../src/domain/auth-token';
@@ -11,6 +11,7 @@ import { Principal } from '../src/domain/principal';
 import { UserSecurityContext } from '../src/domain/security-context';
 import { createTokenClaim } from '../src/domain/auth-claim';
 import moment from 'moment';
+import { getTokenInfo } from '../src/service/util';
 
 describe('Test Token Creation', () => {
 
@@ -60,8 +61,8 @@ describe('Test Token Creation', () => {
     test('Test Token Authenticator Success', async () => {
         // arrange
         const authToken = getTestToken();
-        const encoder = new TokenConverterImpl(authToken.key.length);
-        const testClaim = createTokenClaim(encoder.encode(authToken.key, authToken.plainToken));
+        const encoder = new TokenEncoderStringSeparated('.');
+        const testClaim = createTokenClaim(encoder.encode(getTokenInfo(authToken)));
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
@@ -75,9 +76,10 @@ describe('Test Token Creation', () => {
 
     test('Test Token Authenticator Fail with Incorrect Key', async () => {
         // arrange
-        const encoder = new TokenConverterImpl(30);
+        const encoder = new TokenEncoderStringSeparated('.');
         const authToken = getTestToken();
-        const testClaim = createTokenClaim(encoder.encode('AOhOX_7thgqJSbL8IzACweUcIP2D--', authToken.plainToken));
+        const failAuthToken = { ...authToken, key: 'AOhOX_7thgqJSbL8IzACweUcIP2D--' };
+        const testClaim = createTokenClaim(encoder.encode(getTokenInfo(failAuthToken)));
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
@@ -91,9 +93,10 @@ describe('Test Token Creation', () => {
 
     test('Test Token Authenticator Fail with Incorrect Token', async () => {
         // arrange
-        const encoder = new TokenConverterImpl(30);
+        const encoder = new TokenEncoderStringSeparated('.');
         const authToken = getTestToken();
-        const testClaim = createTokenClaim(encoder.encode(authToken.key, 'ZWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea'));
+        const failAuthToken = { ...authToken, plainToken: 'ZWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea' };
+        const testClaim = createTokenClaim(encoder.encode(getTokenInfo(failAuthToken)));
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
@@ -114,7 +117,7 @@ describe('Test Token Creation', () => {
         const tokenLength = 50;
         const keyLength = 30;
         // act
-        const encoder = new TokenConverterImpl(keyLength);
+        const encoder = new TokenEncoderStringSeparated('.');
         const secureHash = new SecureHashImpl();
         const randomStringGenerator = new RandomStringGeneratorImpl();
         const keyCreator = new TokenKeyCreatorRandom(randomStringGenerator, keyLength);
@@ -123,7 +126,7 @@ describe('Test Token Creation', () => {
         const authToken = await creator.createAuthenticationToken(testContext);
         const mockTokenDao = new TokenDaoMocker(authToken);
         // - authenticate encoded token 
-        const tokenClaim = createTokenClaim(encoder.encode(authToken.key, authToken.plainToken));
+        const tokenClaim = createTokenClaim(encoder.encode(getTokenInfo(authToken)));
         const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
         const context = await authenticator.authenticateToken(tokenClaim);
         // assert

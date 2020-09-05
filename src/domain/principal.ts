@@ -1,4 +1,4 @@
 export interface Principal {
-  readonly username: string;
-  passwordHash: string;
+    readonly username: string;
+    encryptedPassword: string;
 }

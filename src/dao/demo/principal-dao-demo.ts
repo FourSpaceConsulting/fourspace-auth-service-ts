@@ -1,6 +1,6 @@
-import { PrincipalDao } from "../principal-dao";
-import { MemoryDao } from "./memory-dao";
-import { Principal } from "../../domain/principal";
+import { PrincipalDao } from '../principal-dao';
+import { MemoryDao } from './memory-dao';
+import { Principal } from '../../domain/principal';
 
 /**
  * Demo Principal dao
@@ -8,16 +8,17 @@ import { Principal } from "../../domain/principal";
  */
 
 export class PrincipalDaoDemo<P extends Principal> implements PrincipalDao<P> {
-  private readonly _storage: MemoryDao<P, string, object>;
-  private readonly _key: string = ((prop: string & keyof P) => prop)(
-    "username"
-  );
+    private readonly _storage: MemoryDao<P, string, object>;
+    private readonly _key: string = ((prop: string & keyof P) => prop)('username');
 
-  constructor(items: ReadonlyArray<P>) {
-    this._storage = new MemoryDao(this._key, () => false, 0, items);
-  }
+    constructor(items: ReadonlyArray<P>) {
+        this._storage = new MemoryDao(this._key, () => false, 0, items);
+    }
+    public savePrincipal(principal: P): Promise<P> {
+        return this._storage.save(principal);
+    }
 
-  public getPrincipal(username: string): Promise<P> {
-    return this._storage.getById(username);
-  }
+    public getPrincipal(username: string): Promise<P> {
+        return this._storage.getById(username);
+    }
 }

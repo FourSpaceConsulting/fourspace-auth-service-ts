@@ -1,6 +1,13 @@
+export enum ActionType {
+    Register,
+    PasswordReset,
+}
 export interface ActionMessage<P> {
-  readonly principal: ReadonlyArray<P>;
-  readonly message: string;
-  readonly actionLinkTitle: string;
-  readonly actionLink: string;
+    readonly principal: P;
+    readonly actionType: ActionType;
+    readonly actionToken: string;
+}
+export interface ActionMessageResponse {
+    readonly isSuccess: boolean;
+    readonly errorMessage?: string;
 }

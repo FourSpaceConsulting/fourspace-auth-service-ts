@@ -6,7 +6,7 @@ import { RandomStringGeneratorImpl } from '../src/service/impl/random-string-gen
 import { TokenEncoderStringSeparated } from '../src/service/impl/token-encoder-string-separated';
 import { DateProvider } from '../src/service/date-provider';
 import { TokenDao } from '../src/dao/token-dao';
-import { AuthToken, AuthTokenSecure } from '../src/domain/auth-token';
+import { AuthToken, AuthTokenSecure, TokenType } from '../src/domain/auth-token';
 import { Principal } from '../src/domain/principal';
 import { UserSecurityContext } from '../src/domain/security-context';
 import { createTokenClaim } from '../src/domain/auth-claim';
@@ -26,22 +26,40 @@ describe('Test Token Creation', () => {
     }));
 
     // get a valid test token
-    function getTestToken(): AuthToken<Principal> {
-        const testUser = { username: 'testUser@test.com', passwordHash: '' };
+    function getTestToken(tokenType: TokenType): AuthToken<Principal> {
+        const testUser = { username: 'testUser@test.com', encryptedPassword: '' };
         const testDate: Date = moment(Date.UTC(2020, 1, 1)).toDate();
         return {
             key: 'IOhOX_7thgqJSbL8IzACweUcIP2D--',
             plainToken: 'RWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea',
             hashToken: '$argon2id$v=19$m=65536,t=2,p=1$lu1rT+rmvqkp0BhPRH2r9A$kHkGkE3pnZT7sAy3Y7V263hWGvqvcNaAi37rnzHfGdM',
             created: testDate,
-            user: testUser
+            user: testUser,
+            expiry: testDate,
+            tokenType,
         };
     }
 
+    test('Test token encoder', () => {
+        const encoder = new TokenEncoderStringSeparated('.');
+        const tokenInfo = {
+            tokenKey: 'IOhOX_7thgqJSbL8IzACweUcIP2D--',
+            tokenValue: 'RWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea',
+            expire: moment(Date.UTC(2100, 1, 1)).unix()
+        };
+        // act
+        const encoded = encoder.encode(tokenInfo);
+        const decoded = encoder.decode(encoded);
+        // assert
+        expect(encoded).toEqual('IOhOX_7thgqJSbL8IzACweUcIP2D--.RWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea.Qe6V5rAAAAA=');
+        expect(decoded.tokenKey).toEqual(tokenInfo.tokenKey);
+        expect(decoded.tokenValue).toEqual(tokenInfo.tokenValue);
+        expect(decoded.expire).toEqual(tokenInfo.expire);
+    });
+
     test('Test Token Creator Implementation', async () => {
         // arrange
-        const testUser = { username: 'testUser@test.com', passwordHash: '' };
-        const testContext: UserSecurityContext<Principal> = { isAuthenticated: true, authClaim: null, principal: testUser };
+        const testUser = { username: 'testUser@test.com', encryptedPassword: '' };
         const testDate = moment(Date.UTC(2020, 1, 1)).toDate();
         const dateProvider = new DateProviderMocker(testDate);
         const tokenLength = 50;
@@ -50,7 +68,7 @@ describe('Test Token Creation', () => {
         const randomStringGenerator = new RandomStringGeneratorImpl();
         const keyCreator = new TokenKeyCreatorRandom(randomStringGenerator, keyLength);
         const creator = new TokenCreatorImpl<Principal>(keyCreator, new SecureHashImpl(), randomStringGenerator, dateProvider, tokenLength);
-        const token = await creator.createAuthenticationToken(testContext);
+        const token = await creator.createAuthenticationToken(testUser);
         // assert
         expect(token).toBeTruthy();
         expect(token.key.length).toEqual(keyLength);
@@ -60,14 +78,14 @@ describe('Test Token Creation', () => {
 
     test('Test Token Authenticator Success', async () => {
         // arrange
-        const authToken = getTestToken();
+        const authToken = getTestToken(TokenType.UserToken);
         const encoder = new TokenEncoderStringSeparated('.');
         const testClaim = createTokenClaim(encoder.encode(getTokenInfo(authToken)));
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
         const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
-        const context = await authenticator.authenticateToken(testClaim);
+        const context = await authenticator.authenticateUserToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
         expect(context.isAuthenticated).toBeTruthy();
@@ -77,14 +95,14 @@ describe('Test Token Creation', () => {
     test('Test Token Authenticator Fail with Incorrect Key', async () => {
         // arrange
         const encoder = new TokenEncoderStringSeparated('.');
-        const authToken = getTestToken();
+        const authToken = getTestToken(TokenType.UserToken);
         const failAuthToken = { ...authToken, key: 'AOhOX_7thgqJSbL8IzACweUcIP2D--' };
         const testClaim = createTokenClaim(encoder.encode(getTokenInfo(failAuthToken)));
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
         const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
-        const context = await authenticator.authenticateToken(testClaim);
+        const context = await authenticator.authenticateUserToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
         expect(context.isAuthenticated).toBeFalsy();
@@ -94,14 +112,14 @@ describe('Test Token Creation', () => {
     test('Test Token Authenticator Fail with Incorrect Token', async () => {
         // arrange
         const encoder = new TokenEncoderStringSeparated('.');
-        const authToken = getTestToken();
+        const authToken = getTestToken(TokenType.UserToken);
         const failAuthToken = { ...authToken, plainToken: 'ZWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea' };
         const testClaim = createTokenClaim(encoder.encode(getTokenInfo(failAuthToken)));
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
         const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
-        const context = await authenticator.authenticateToken(testClaim);
+        const context = await authenticator.authenticateUserToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
         expect(context.isAuthenticated).toBeFalsy();
@@ -110,8 +128,7 @@ describe('Test Token Creation', () => {
 
     test('Test Create and Authenticate Token', async () => {
         // arrange
-        const testUser = { username: 'testUser@test.com', passwordHash: '' };
-        const testContext: UserSecurityContext<Principal> = { isAuthenticated: true, authClaim: null, principal: testUser };
+        const testUser = { username: 'testUser@test.com', encryptedPassword: '' };
         const testDate = moment(Date.UTC(2020, 1, 1)).toDate();
         const dateProvider = new DateProviderMocker(testDate);
         const tokenLength = 50;
@@ -123,12 +140,12 @@ describe('Test Token Creation', () => {
         const keyCreator = new TokenKeyCreatorRandom(randomStringGenerator, keyLength);
         const creator = new TokenCreatorImpl<Principal>(keyCreator, secureHash, randomStringGenerator, dateProvider, tokenLength);
         // - create new token, and set mock
-        const authToken = await creator.createAuthenticationToken(testContext);
+        const authToken = await creator.createAuthenticationToken(testUser);
         const mockTokenDao = new TokenDaoMocker(authToken);
         // - authenticate encoded token 
         const tokenClaim = createTokenClaim(encoder.encode(getTokenInfo(authToken)));
         const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
-        const context = await authenticator.authenticateToken(tokenClaim);
+        const context = await authenticator.authenticateUserToken(tokenClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
         expect(context.isAuthenticated).toBeTruthy();

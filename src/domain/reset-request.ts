@@ -1,11 +1,11 @@
 export interface ResetRequest {
-  readonly username: string;
-  readonly origin: string;
+    readonly username: string;
+    readonly origin: string;
 }
 
-export interface ResetRequestResponse {
-  readonly success: boolean;
-  readonly username: string;
-  readonly origin: string;
-  readonly token: string;
+export interface ResetRequestResponse<P> {
+    readonly success: boolean;
+    readonly origin: string;
+    readonly encodedToken: string;
+    readonly principal: P;
 }

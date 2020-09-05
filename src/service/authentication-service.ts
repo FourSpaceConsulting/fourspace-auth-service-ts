@@ -1,47 +1,48 @@
-import { AuthToken } from "../domain/auth-token";
-import { UserSecurityContext } from "../domain/security-context";
-import {
-  AuthTokenClaim,
-  AuthPasswordClaim,
-  AuthPasswordResetClaim
-} from "../domain/auth-claim";
-import { ResetRequest, ResetRequestResponse } from "../domain/reset-request";
+import { AuthToken } from '../domain/auth-token';
+import { UserSecurityContext } from '../domain/security-context';
+import { AuthTokenClaim, AuthPasswordClaim, AuthPasswordResetClaim } from '../domain/auth-claim';
+import { ResetRequest, ResetRequestResponse } from '../domain/reset-request';
+import { RegisterRequest, RegisterResponse } from '../domain/register-request';
 
 /**
  * General authentication service
  */
 export interface AuthenticationService<P> {
-  /**
-   * Create a user security context from a password claim
-   * @param claim
-   */
-  verifyPasswordClaim(
-    claim: AuthPasswordClaim
-  ): Promise<UserSecurityContext<P>>;
+    /**
+     * Register a new user
+     * @param registerRequest register info
+     */
+    registerUser(registerRequest: RegisterRequest<P>): Promise<RegisterResponse>;
 
-  /**
-   * reset the password
-   * @param claim reset claim
-   */
-  resetPassword(claim: AuthPasswordResetClaim): UserSecurityContext<P>;
+    /**
+     * Create a user security context from a password claim
+     * @param claim
+     */
+    verifyPasswordClaim(claim: AuthPasswordClaim): Promise<UserSecurityContext<P>>;
 
-  /**
-   * Request a password reset for a user
-   * @param resetRequest reset info
-   */
-  requestResetPassword(resetRequest: ResetRequest): ResetRequestResponse;
+    /**
+     * Request a password reset for a user
+     * @param resetRequest reset info
+     */
+    requestResetPassword(resetRequest: ResetRequest): Promise<ResetRequestResponse<P>>;
 
-  /**
-   * Create a user security context from a token claim
-   * @param claim token claim
-   */
-  verifyTokenClaim(claim: AuthTokenClaim): Promise<UserSecurityContext<P>>;
+    /**
+     * reset the password
+     * @param claim reset claim
+     */
+    resetPassword(claim: AuthPasswordResetClaim, newPassword: string): Promise<boolean>;
 
-  /**
-   * Create a new user token
-   * @param context
-   */
-  createUserToken(context: UserSecurityContext<P>): Promise<string>;
+    /**
+     * Create a user security context from a token claim
+     * @param claim token claim
+     */
+    verifyTokenClaim(claim: AuthTokenClaim): Promise<UserSecurityContext<P>>;
+
+    /**
+     * Create a new user token
+     * @param principal principal for token
+     */
+    createUserToken(principal: P): Promise<string>;
 }
 
 /**

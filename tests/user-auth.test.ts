@@ -1,7 +1,7 @@
 import { SecureHashImpl } from '../src/service/impl/secure-hash-impl';
 import { UserAuthenticatorImpl } from '../src/service/impl/user-authenticator-impl';
 import { PrincipalDao } from '../src/dao/principal-dao';
-import { AuthToken, AuthTokenSecure } from '../src/domain/auth-token';
+import { AuthToken, AuthTokenSecure, TokenType } from '../src/domain/auth-token';
 import { Principal } from '../src/domain/principal';
 import { createPasswordClaim } from '../src/domain/auth-claim';
 import moment from 'moment';
@@ -11,27 +11,15 @@ describe('Test User Authentication', () => {
     // Mock the token dao and date provider
     const PricipalDaoMocker = jest.fn<PrincipalDao<Principal>, [Principal]>((principal) => ({
         getPrincipal: jest.fn((key) => Promise.resolve(principal.username === key ? principal : null)),
+        savePrincipal: jest.fn()
     }));
-
-    // get a valid test token
-    function getTestToken(): AuthToken<Principal> {
-        const testUser = { username: 'testUser@test.com', passwordHash: '' };
-        const testDate: Date = moment(Date.UTC(2020, 1, 1)).toDate();
-        return {
-            key: 'IOhOX_7thgqJSbL8IzACweUcIP2D--',
-            plainToken: 'RWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea',
-            hashToken: '$argon2id$v=19$m=65536,t=2,p=1$lu1rT+rmvqkp0BhPRH2r9A$kHkGkE3pnZT7sAy3Y7V263hWGvqvcNaAi37rnzHfGdM',
-            created: testDate,
-            user: testUser
-        };
-    }
 
     test('Test User Authenticator Success', async () => {
         // arrange
         const username = 'testUser@test.com';
         const password = 'testpassword';
-        const passwordHash = '$argon2id$v=19$m=65536,t=2,p=1$63rP0KVWybD9jDS5vCqlLA$2v8XhYF9m/y0yPMIese5IS7FxDBwT1XwjHJ0xzg8thE';
-        const testPrincipal = { username, passwordHash };
+        const encryptedPassword = '$argon2id$v=19$m=65536,t=2,p=1$63rP0KVWybD9jDS5vCqlLA$2v8XhYF9m/y0yPMIese5IS7FxDBwT1XwjHJ0xzg8thE';
+        const testPrincipal = { username, encryptedPassword };
         const testClaim = createPasswordClaim(username, password);
         // act
         const mockPrincipalDao = new PricipalDaoMocker(testPrincipal);
@@ -78,7 +66,7 @@ describe('Test User Authentication', () => {
 
     // test('Test Create and Authenticate Token', async () => {
     //     // arrange
-    //     const testUser = { username: 'testUser@test.com', passwordHash: '' };
+    //     const testUser = { username: 'testUser@test.com', encryptedPassword: '' };
     //     const testContext: UserSecurityContext<Principal> = { isAuthenticated: true, authClaim: null, principal: testUser };
     //     const testDate = moment(Date.UTC(2020, 1, 1)).toDate();
     //     const dateProvider = new DateProviderMocker(testDate);

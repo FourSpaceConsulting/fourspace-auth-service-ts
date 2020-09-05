@@ -18,12 +18,12 @@ export class ActionMessageServiceDemo<P extends Principal> implements ActionMess
         // tslint:disable-next-line:no-console
         console.log(
             'ActionMessage Type:' +
-            actionMessage.actionType +
-            ' To [' +
-            actionMessage.principal.username +
-            '] with token [' +
-            actionMessage.actionToken +
-            ']'
+                actionMessage.actionType +
+                ' To [' +
+                actionMessage.principal.username +
+                '] with token [' +
+                actionMessage.actionToken +
+                ']'
         );
         return Promise.resolve({ isSuccess: true });
     }

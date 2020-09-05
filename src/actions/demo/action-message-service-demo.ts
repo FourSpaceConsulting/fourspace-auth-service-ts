@@ -15,14 +15,15 @@ export class ActionMessageServiceDemo<P extends Principal> implements ActionMess
 
     public sendActionMessage(actionMessage: ActionMessage<P>): Promise<ActionMessageResponse> {
         this._actionMessages.push(actionMessage);
+        // tslint:disable-next-line:no-console
         console.log(
             'ActionMessage Type:' +
-                actionMessage.actionType +
-                ' To [' +
-                actionMessage.principal.username +
-                '] with token [' +
-                actionMessage.actionToken +
-                ']'
+            actionMessage.actionType +
+            ' To [' +
+            actionMessage.principal.username +
+            '] with token [' +
+            actionMessage.actionToken +
+            ']'
         );
         return Promise.resolve({ isSuccess: true });
     }

@@ -9,8 +9,14 @@ export interface PrincipalDao<P> {
     getPrincipal(username: string): Promise<P>;
 
     /**
-     * Save the principal
+     * Save a new principal
      * @param principal principal
      */
     savePrincipal(principal: P): Promise<P>;
+
+    /**
+     * Save an existing principal
+     * @param principal principal
+     */
+    updatePrincipal(principal: P): Promise<P>;
 }

@@ -1,5 +1,5 @@
 export enum ActionType {
-    Register,
+    Verify,
     PasswordReset,
 }
 export interface ActionMessage<P> {

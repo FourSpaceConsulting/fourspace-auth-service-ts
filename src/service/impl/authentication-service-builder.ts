@@ -12,7 +12,7 @@ import { TokenAuthenticatorImpl } from './token-authenticator-impl';
 import { TokenEncoder } from '../token-encoder';
 import { TokenEncoderStringSeparated } from './token-encoder-string-separated';
 import { TokenCreator } from '../token-creator';
-import { TokenCreatorImpl } from './token-creator-impl';
+import { TokenCreatorImpl, ExpiryConfig } from './token-creator-impl';
 import { TokenKeyCreator } from '../token-key-creator';
 import { TokenKeyCreatorRandom } from './token-key-creator-random';
 import { RandomStringGenerator } from '../random-string-generator';
@@ -21,11 +21,14 @@ import { DateProvider } from '../date-provider';
 import { DateProviderSystem } from './date-provider-system';
 import { PrincipalDaoDemo } from '../../dao/demo/principal-dao-demo';
 import { TokenDaoDemo } from '../../dao/demo/token-dao-demo';
+import { ActionMessageService } from '../../actions/action-message-service';
+import { ActionMessageServiceDemo } from '../../actions/demo/action-message-service-demo';
 
 export class AuthenticationServiceBuilder<P extends Principal> {
     private _principalDao: PrincipalDao<P>;
     private _tokenDao: TokenDao<P>;
     private _secureHash: SecureHash;
+    private _actionMessageService: ActionMessageService<P>;
     private _userAuthenticator: UserAuthenticator<P>;
     private _tokenAuthenticator: TokenAuthenticator<P>;
     private _tokenEncoder: TokenEncoder;
@@ -35,6 +38,12 @@ export class AuthenticationServiceBuilder<P extends Principal> {
     private _dateProvider: DateProvider;
     private _tokenLength: number = 30;
     private _keyLength: number = 20;
+    private _expiryConfig: ExpiryConfig = {
+        verifyExpiry: 60,
+        passwordResetExpiry: 10,
+        accessExpiry: 30,
+        refreshExpiry: 180,
+    }
 
     public buildAuthenticationManager(): AuthenticationService<P> {
         const userAuthenticator = this.getUserAuthenticator();
@@ -47,7 +56,8 @@ export class AuthenticationServiceBuilder<P extends Principal> {
             this.getTokenEncoder(),
             this.getTokenDao(),
             this.getPrincipalDao(),
-            this.getSecureHash()
+            this.getSecureHash(),
+            this.getActionMessageService()
         );
     }
 
@@ -90,6 +100,28 @@ export class AuthenticationServiceBuilder<P extends Principal> {
         this._tokenDao = value;
         return this;
     }
+
+
+    /**
+     * Getter actionMessageService
+     * @return {ActionMessageService<P>}
+     */
+    private getActionMessageService(): ActionMessageService<P> {
+        if (this._actionMessageService == null) {
+            this._actionMessageService = new ActionMessageServiceDemo();
+        }
+        return this._actionMessageService;
+    }
+
+    /**
+     * Setter actionMessageService
+     * @param {ActionMessageService<P>} value
+     */
+    public set actionMessageService(value: ActionMessageService<P>) {
+        this._actionMessageService = value;
+    }
+
+
 
     /**
      * Get secure hash or default version
@@ -182,7 +214,8 @@ export class AuthenticationServiceBuilder<P extends Principal> {
                 this.getSecureHash(),
                 this.getRandomStringGenerator(),
                 this.getDateProvider(),
-                this.getTokenLength()
+                this.getTokenLength(),
+                this.getExpiryConfig()
             );
         }
         return this._tokenCreator;
@@ -284,4 +317,23 @@ export class AuthenticationServiceBuilder<P extends Principal> {
     public set tokenLength(value: number) {
         this._tokenLength = value;
     }
+
+
+    /**
+     * Getter expiryConfig
+     * @return {ExpiryConfig }
+     */
+    private getExpiryConfig(): ExpiryConfig {
+        return this._expiryConfig;
+    }
+
+    /**
+     * Setter expiryConfig
+     * @param {ExpiryConfig } value
+     */
+    public set expiryConfig(value: ExpiryConfig) {
+        this._expiryConfig = value;
+    }
+
+
 }

@@ -14,6 +14,11 @@ export class PrincipalDaoDemo<P extends Principal> implements PrincipalDao<P> {
     constructor(items: ReadonlyArray<P>) {
         this._storage = new MemoryDao(this._key, () => false, 0, items);
     }
+
+    public updatePrincipal(principal: P): Promise<P> {
+        return this._storage.save(principal);
+    }
+
     public savePrincipal(principal: P): Promise<P> {
         return this._storage.save(principal);
     }

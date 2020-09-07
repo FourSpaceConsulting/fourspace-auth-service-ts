@@ -1,6 +1,6 @@
-import { AuthToken } from '../domain/auth-token';
-import { UserSecurityContext } from '../domain/security-context';
-import { AuthTokenClaim, AuthPasswordClaim, AuthPasswordResetClaim } from '../domain/auth-claim';
+import { AuthToken, AccessTokenResponse, AuthTokenSecure } from '../domain/auth-token';
+import { UserSecurityContext, ActionSecurityContext } from '../domain/security-context';
+import { AccessTokenAuthClaim, PasswordAuthClaim, PasswordResetAuthClaim, RefreshAccessTokenAuthClaim, VerifyUserAuthClaim } from '../domain/auth-claim';
 import { ResetRequest, ResetRequestResponse } from '../domain/reset-request';
 import { RegisterRequest, RegisterResponse } from '../domain/register-request';
 
@@ -9,16 +9,58 @@ import { RegisterRequest, RegisterResponse } from '../domain/register-request';
  */
 export interface AuthenticationService<P> {
     /**
+     * Create a user security context from a password claim
+     * @param claim
+     */
+    authenticatePasswordClaim(claim: PasswordAuthClaim): Promise<UserSecurityContext<P>>;
+
+    /**
+     * Create a user security context from a token claim
+     * @param claim token claim
+     */
+    authenticateAccessTokenClaim(claim: AccessTokenAuthClaim): Promise<UserSecurityContext<P>>;
+
+    /**
+     * Create an action security context from a verify claim
+     * @param claim verify claim
+     */
+    authenticateVerifyClaim(claim: VerifyUserAuthClaim): Promise<ActionSecurityContext<P>>;
+
+    /**
+     * Create an action security context from a refresh claim
+     * @param principal principal for token
+     */
+    authenticateTokenRefreshClaim(claim: RefreshAccessTokenAuthClaim): Promise<ActionSecurityContext<P>>;
+
+    /**
+     * Create an action security context from a refresh claim
+     * @param principal principal for token
+     */
+    authenticatePasswordResetClaim(claim: PasswordResetAuthClaim): Promise<ActionSecurityContext<P>>;
+
+    /**
+     * Create a new access token
+     * @param principal principal for token
+     */
+    createAccessToken(principal: P): Promise<AccessTokenResponse>;
+
+    /**
+     * Refresh an access token
+     * @param principal principal for token
+     */
+    refreshAccessToken(refreshToken: AuthTokenSecure<P>): Promise<AccessTokenResponse>;
+
+    /**
      * Register a new user
      * @param registerRequest register info
      */
     registerUser(registerRequest: RegisterRequest<P>): Promise<RegisterResponse>;
 
     /**
-     * Create a user security context from a password claim
-     * @param claim
+     * verify new user
+     * @param principal principal for token
      */
-    verifyPasswordClaim(claim: AuthPasswordClaim): Promise<UserSecurityContext<P>>;
+    verifyUser(principal: P): Promise<boolean>;
 
     /**
      * Request a password reset for a user
@@ -27,22 +69,12 @@ export interface AuthenticationService<P> {
     requestResetPassword(resetRequest: ResetRequest): Promise<ResetRequestResponse<P>>;
 
     /**
-     * reset the password
-     * @param claim reset claim
+     * Reset the password for a user
+     * @param principal 
+     * @param newPassword 
      */
-    resetPassword(claim: AuthPasswordResetClaim, newPassword: string): Promise<boolean>;
+    resetPassword(principal: P, newPassword: string): Promise<boolean>;
 
-    /**
-     * Create a user security context from a token claim
-     * @param claim token claim
-     */
-    verifyTokenClaim(claim: AuthTokenClaim): Promise<UserSecurityContext<P>>;
-
-    /**
-     * Create a new user token
-     * @param principal principal for token
-     */
-    createUserToken(principal: P): Promise<string>;
 }
 
 /**

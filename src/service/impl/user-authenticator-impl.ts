@@ -1,5 +1,5 @@
 import { UserAuthenticator } from '../user-authenticator';
-import { AuthPasswordClaim } from '../../domain/auth-claim';
+import { PasswordAuthClaim } from '../../domain/auth-claim';
 import { PrincipalDao } from '../../dao/principal-dao';
 import { Principal } from '../../domain/principal';
 import { SecureHash } from '../secure-hash';
@@ -18,7 +18,7 @@ export class UserAuthenticatorImpl<P extends Principal> implements UserAuthentic
         this._secureHash = secureHash;
     }
 
-    public async authenticateUser(claim: AuthPasswordClaim): Promise<AuthResult<P>> {
+    public async authenticateUser(claim: PasswordAuthClaim): Promise<AuthResult<P>> {
         const user = await this._principalDao.getPrincipal(claim.user);
         if (user != null && (await this._secureHash.verifyHash(claim.password, user.encryptedPassword))) {
             return {

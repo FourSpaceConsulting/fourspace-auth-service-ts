@@ -1,5 +1,5 @@
 ﻿import { Principal } from '../domain/principal';
-import { AuthToken } from '../domain/auth-token';
+import { AuthToken, AuthTokenSecure } from '../domain/auth-token';
 import { UserSecurityContext } from '../domain/security-context';
 
 /**
@@ -7,10 +7,28 @@ import { UserSecurityContext } from '../domain/security-context';
  */
 export interface TokenCreator<P> {
     /**
-     * Creates a new user authentication token for this user
+     * Creates a new user verification token for this user
      * @param authUser user
      */
-    createAuthenticationToken(user: P): Promise<AuthToken<P>>;
+    createVerifyToken(user: P): Promise<AuthToken<P>>;
+
+    /**
+     * Creates a new access token for this user
+     * @param authUser user
+     */
+    createAccessToken(user: P): Promise<AuthToken<P>>;
+
+    /**
+     * Creates a new reset token for an existing access token
+     * @param authUser user
+     */
+    createRefreshToken(user: P): Promise<AuthToken<P>>;
+
+    /**
+     * Updates an existing reset token
+     * @param authUser user
+     */
+    updateRefreshToken(currentToken: AuthTokenSecure<P>): Promise<AuthToken<P>>;
 
     /**
      * Creates a new reset token for this user

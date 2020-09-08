@@ -87,7 +87,9 @@ export class TokenCreatorImpl<P> implements TokenCreator<P> {
     }
 
     private _getExpiry(from: Date, minutes: number): Date {
-        return moment(from).add(minutes, "minute").toDate();
+        return moment(from)
+            .add(minutes, 'minute')
+            .toDate();
     }
 
     private async _createToken(user: P, tokenType: TokenType, created: Date, expiry: Date): Promise<AuthToken<P>> {
@@ -105,4 +107,3 @@ export class TokenCreatorImpl<P> implements TokenCreator<P> {
         };
     }
 }
-

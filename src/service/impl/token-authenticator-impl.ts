@@ -2,7 +2,12 @@ import { TokenDao } from '../../dao/token-dao';
 import { TokenAuthenticator } from './../token-authenticator';
 import { SecureHash } from './../secure-hash';
 import { TokenEncoder } from '../token-encoder';
-import { AccessTokenAuthClaim, PasswordResetAuthClaim, RefreshAccessTokenAuthClaim } from '../../domain/auth-claim';
+import {
+    AccessTokenAuthClaim,
+    PasswordResetAuthClaim,
+    RefreshAccessTokenAuthClaim,
+    VerifyUserAuthClaim,
+} from '../../domain/auth-claim';
 import { TokenType } from '../../domain/auth-token';
 import { TokenAuthResult } from '../../domain/auth-result';
 import { createFailTokenResult } from '../util';
@@ -19,6 +24,11 @@ export class TokenAuthenticatorImpl<P> implements TokenAuthenticator<P> {
         this._tokenParser = tokenParser;
         this._tokenDao = tokenDao;
         this._secureHash = secureHash;
+    }
+
+    public async authenticateVerifyToken(claim: VerifyUserAuthClaim): Promise<TokenAuthResult<P>> {
+        const token = claim.verifyToken;
+        return this._authToken(token, TokenType.VerifyUser);
     }
 
     public async authenticateRefreshToken(claim: RefreshAccessTokenAuthClaim): Promise<TokenAuthResult<P>> {

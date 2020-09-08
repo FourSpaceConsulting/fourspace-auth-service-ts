@@ -1,6 +1,12 @@
-import { AuthToken, AccessTokenResponse, AuthTokenSecure } from '../domain/auth-token';
+import { AuthToken, AccessTokenResponse, AuthTokenSecure, TokenType } from '../domain/auth-token';
 import { UserSecurityContext, ActionSecurityContext } from '../domain/security-context';
-import { AccessTokenAuthClaim, PasswordAuthClaim, PasswordResetAuthClaim, RefreshAccessTokenAuthClaim, VerifyUserAuthClaim } from '../domain/auth-claim';
+import {
+    AccessTokenAuthClaim,
+    PasswordAuthClaim,
+    PasswordResetAuthClaim,
+    RefreshAccessTokenAuthClaim,
+    VerifyUserAuthClaim,
+} from '../domain/auth-claim';
 import { ResetRequest, ResetRequestResponse } from '../domain/reset-request';
 import { RegisterRequest, RegisterResponse } from '../domain/register-request';
 
@@ -51,10 +57,16 @@ export interface AuthenticationService<P> {
     refreshAccessToken(refreshToken: AuthTokenSecure<P>): Promise<AccessTokenResponse>;
 
     /**
+     * Revoke a refresh token
+     * @param principal principal for token
+     */
+    revokeRefreshToken(refreshToken: AuthTokenSecure<P>): Promise<boolean>;
+
+    /**
      * Register a new user
      * @param registerRequest register info
      */
-    registerUser(registerRequest: RegisterRequest<P>): Promise<RegisterResponse>;
+    createUserAndSendVerificationMessage(registerRequest: RegisterRequest<P>): Promise<RegisterResponse>;
 
     /**
      * verify new user
@@ -70,11 +82,10 @@ export interface AuthenticationService<P> {
 
     /**
      * Reset the password for a user
-     * @param principal 
-     * @param newPassword 
+     * @param principal
+     * @param newPassword
      */
     resetPassword(principal: P, newPassword: string): Promise<boolean>;
-
 }
 
 /**

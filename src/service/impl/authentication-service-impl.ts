@@ -1,5 +1,11 @@
 import { AuthenticationService } from '../authentication-service';
-import { PasswordAuthClaim, AccessTokenAuthClaim, PasswordResetAuthClaim, RefreshAccessTokenAuthClaim, VerifyUserAuthClaim } from '../../domain/auth-claim';
+import {
+    PasswordAuthClaim,
+    AccessTokenAuthClaim,
+    PasswordResetAuthClaim,
+    RefreshAccessTokenAuthClaim,
+    VerifyUserAuthClaim,
+} from '../../domain/auth-claim';
 import { UserSecurityContext, ActionSecurityContext } from '../../domain/security-context';
 import { UserAuthenticator } from '../user-authenticator';
 import { TokenCreator } from '../token-creator';
@@ -13,8 +19,9 @@ import { Principal } from '../../domain/principal';
 import { SecureHash } from '../secure-hash';
 import { RegisterRequest, RegisterResponse } from '../../domain/register-request';
 import { ActionMessage, ActionType } from '../../domain/action-message';
-import { AccessTokenResponse, AuthToken, AuthTokenSecure } from '../../domain/auth-token';
+import { AccessTokenResponse, AuthToken, AuthTokenSecure, TokenType } from '../../domain/auth-token';
 import { ActionMessageService } from '../../actions/action-message-service';
+import { createTokenSearchCriteriaSingleToken, createTokenSearchCriteriaByTypeAndUser } from '../../dao/util';
 
 /**
  * Implementation of authentication service
@@ -39,6 +46,16 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         secureHash: SecureHash,
         actionMessageService: ActionMessageService<P>
     ) {
+        // null checks
+        if (userAuthenticator == null) throw new Error('Undefined userAuthenticator');
+        if (tokenAuthenticator == null) throw new Error('Undefined tokenAuthenticator');
+        if (tokenCreator == null) throw new Error('Undefined tokenCreator');
+        if (tokenEncoder == null) throw new Error('Undefined tokenEncoder');
+        if (tokenDao == null) throw new Error('Undefined tokenDao');
+        if (principalDao == null) throw new Error('Undefined principalDao');
+        if (secureHash == null) throw new Error('Undefined secureHash');
+        if (actionMessageService == null) throw new Error('Undefined actionMessageService');
+        // set members
         this._userAuthenticator = userAuthenticator;
         this._tokenAuthenticator = tokenAuthenticator;
         this._tokenCreator = tokenCreator;
@@ -57,7 +74,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
             isAuthenticated: result.isAuthenticated,
             errorMessage: result.errorMessage,
             authClaim: claim,
-            authToken: result.authToken
+            authToken: result.authToken,
         };
     }
 
@@ -93,7 +110,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
             isAuthenticated: result.isAuthenticated,
             errorMessage: result.errorMessage,
             authClaim: claim,
-            authToken: result.authToken
+            authToken: result.authToken,
         };
     }
 
@@ -105,35 +122,49 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
             isAuthenticated: result.isAuthenticated,
             errorMessage: result.errorMessage,
             authClaim: claim,
-            authToken: result.authToken
+            authToken: result.authToken,
         };
     }
 
-
     public async createAccessToken(principal: P): Promise<AccessTokenResponse> {
-        // create and save new token
-        const accessToken = await this._saveToken(await this._tokenCreator.createAccessToken(principal));
-        // persist
+        // first create a refresh token for this user
         const refreshToken = await this._saveToken(await this._tokenCreator.createRefreshToken(principal));
+        // then create associated access token
+        const accessToken = await this._saveToken(
+            this._addAssociatedKey(await this._tokenCreator.createAccessToken(principal), refreshToken.key)
+        );
         // encode and return
         return {
             accessToken: this._tokenEncoder.encode(getTokenInfo(accessToken)),
-            refreshToken: this._tokenEncoder.encode(getTokenInfo(refreshToken))
-        }
-    }
-
-    public async refreshAccessToken(refreshToken: AuthTokenSecure<P>): Promise<AccessTokenResponse> {
-        const newRefreshToken = await this._saveToken(await this._tokenCreator.updateRefreshToken(refreshToken));
-        const accessToken = await this._saveToken(await this._tokenCreator.createAccessToken(refreshToken.principal));
-        return {
-            accessToken: this._tokenEncoder.encode(getTokenInfo(accessToken)),
-            refreshToken: this._tokenEncoder.encode(getTokenInfo(newRefreshToken))
+            refreshToken: this._tokenEncoder.encode(getTokenInfo(refreshToken)),
         };
     }
 
-    public async registerUser(registerRequest: RegisterRequest<P>): Promise<RegisterResponse> {
+    public async refreshAccessToken(refreshToken: AuthTokenSecure<P>): Promise<AccessTokenResponse> {
+        // update the refresh token
+        const newRefreshToken = await this._saveToken(await this._tokenCreator.updateRefreshToken(refreshToken));
+        // then create associated access token
+        const accessToken = await this._saveToken(
+            this._addAssociatedKey(
+                await this._tokenCreator.createAccessToken(refreshToken.principal),
+                newRefreshToken.key
+            )
+        );
+        return {
+            accessToken: this._tokenEncoder.encode(getTokenInfo(accessToken)),
+            refreshToken: this._tokenEncoder.encode(getTokenInfo(newRefreshToken)),
+        };
+    }
+
+    public async revokeRefreshToken(refreshToken: AuthTokenSecure<P>): Promise<boolean> {
+        await this._tokenDao.deleteTokens(createTokenSearchCriteriaSingleToken(refreshToken));
+        return true;
+    }
+
+    public async createUserAndSendVerificationMessage(registerRequest: RegisterRequest<P>): Promise<RegisterResponse> {
         // set the encrypted password
         const principal = registerRequest.newPrincipal;
+        principal.isVerified = false;
         principal.encryptedPassword = await this._secureHash.createHash(registerRequest.password);
         // save the principal
         const savedPrincipal = await this._principalDao.savePrincipal(principal);
@@ -142,7 +173,11 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         // encode
         const encodedToken = this._tokenEncoder.encode(getTokenInfo(verifyToken));
         // send action message
-        const action: ActionMessage<P> = { principal: savedPrincipal, actionType: ActionType.Verify, actionToken: encodedToken };
+        const action: ActionMessage<P> = {
+            principal: savedPrincipal,
+            actionType: ActionType.Verify,
+            actionToken: encodedToken,
+        };
         const response = await this._actionMessageService.sendActionMessage(action);
         // return response
         return {
@@ -161,7 +196,11 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
             // encode and return
             const encodedToken = this._tokenEncoder.encode(getTokenInfo(token));
             // send action message
-            const action: ActionMessage<P> = { principal: principal, actionType: ActionType.PasswordReset, actionToken: encodedToken };
+            const action: ActionMessage<P> = {
+                actionType: ActionType.PasswordReset,
+                actionToken: encodedToken,
+                principal,
+            };
             const response = await this._actionMessageService.sendActionMessage(action);
             // return response
             return {
@@ -175,7 +214,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
             success: false,
             origin: resetRequest.origin,
             principal: null,
-            encodedToken: null
+            encodedToken: null,
         };
     }
 
@@ -189,7 +228,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
 
     /**
      * Set verified flag to true and save user
-     * @param principal 
+     * @param principal
      */
     public async verifyUser(principal: P): Promise<boolean> {
         principal.isVerified = true;
@@ -198,15 +237,37 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
     }
 
     /**
+     * Add an associated key to an existing token
+     * @param token
+     * @param associatedKey
+     */
+    private _addAssociatedKey(token: AuthToken<P>, associatedKey: string): AuthToken<P> {
+        return { ...token, associatedKey };
+    }
+
+    /**
      * Save secure part of the token
      * return the auth token (with any values updated by the save action e.g. key)
      * @param token auth token
      */
     private async _saveToken(token: AuthToken<P>): Promise<AuthToken<P>> {
+        // remove plain token from object to be saved
+        const toSave = { ...token };
+        delete toSave.plainToken;
         // persist
-        const secureToken = await this._tokenDao.saveToken(token);
+        const secureToken = await this._tokenDao.saveToken(toSave);
         // merge token, as the key may only be set on persistence
         return { ...token, ...secureToken };
     }
 
+    /**
+     * Delete tokens for a user
+     * @param principal
+     */
+    private async _deleteUserTokens(
+        principal: P,
+        tokenType: TokenType.PasswordResetToken | TokenType.VerifyUser
+    ): Promise<void> {
+        return this._tokenDao.deleteTokens(createTokenSearchCriteriaByTypeAndUser(principal.username, tokenType));
+    }
 }

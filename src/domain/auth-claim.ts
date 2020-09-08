@@ -37,7 +37,6 @@ export interface RefreshAccessTokenAuthClaim {
  */
 export interface PasswordResetAuthClaim {
     readonly claimType: AuthClaimType.PASSWORD_RESET;
-    readonly user: string;
     readonly resetToken: string;
 }
 
@@ -50,16 +49,16 @@ export interface VerifyUserAuthClaim {
 }
 
 export type AuthClaim =
-    PasswordAuthClaim |
-    AccessTokenAuthClaim |
-    RefreshAccessTokenAuthClaim |
-    PasswordResetAuthClaim |
-    VerifyUserAuthClaim;
+    | PasswordAuthClaim
+    | AccessTokenAuthClaim
+    | RefreshAccessTokenAuthClaim
+    | PasswordResetAuthClaim
+    | VerifyUserAuthClaim;
 
 /**
  * Convenience create method
- * @param user 
- * @param password 
+ * @param user
+ * @param password
  */
 export const createPasswordAuthClaim = (user: string, password: string): PasswordAuthClaim => ({
     claimType: AuthClaimType.PASSWORD,
@@ -68,41 +67,39 @@ export const createPasswordAuthClaim = (user: string, password: string): Passwor
 });
 
 /**
- * Convenience create method 
- * @param accessToken 
+ * Convenience create method
+ * @param accessToken
  */
 export const createAccessTokenAuthClaim = (accessToken: string): AccessTokenAuthClaim => ({
     claimType: AuthClaimType.ACCESS_TOKEN,
-    accessToken: accessToken,
+    accessToken,
 });
 
 /**
  * Convenience create method
- * @param refreshToken 
+ * @param refreshToken
  */
 export const createRefreshAccessTokenAuthClaim = (refreshToken: string): RefreshAccessTokenAuthClaim => ({
     claimType: AuthClaimType.REFRESH_TOKEN,
-    refreshToken: refreshToken,
+    refreshToken,
 });
 
 /**
  * Convenience create method
- * @param user 
- * @param resetToken 
+ * @param user
+ * @param resetToken
  */
-export const createPasswordResetAuthClaim = (user: string, resetToken: string): PasswordResetAuthClaim => ({
+export const createPasswordResetAuthClaim = (resetToken: string): PasswordResetAuthClaim => ({
     claimType: AuthClaimType.PASSWORD_RESET,
-    user,
     resetToken,
 });
 
 /**
  * Convenience create method
- * @param user 
- * @param verifyToken 
+ * @param user
+ * @param verifyToken
  */
 export const createVerifyUserAuthClaim = (verifyToken: string): VerifyUserAuthClaim => ({
     claimType: AuthClaimType.VERIFY_USER,
     verifyToken,
 });
-

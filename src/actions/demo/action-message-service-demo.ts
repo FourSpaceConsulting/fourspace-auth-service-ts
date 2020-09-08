@@ -1,6 +1,7 @@
 import { ActionMessageService } from '../action-message-service';
 import { ActionMessage, ActionMessageResponse } from '../../domain/action-message';
 import { Principal } from '../../domain/principal';
+import { getActionTypeName } from '../../service/util';
 
 export class ActionMessageServiceDemo<P extends Principal> implements ActionMessageService<P> {
     private _actionMessages: ActionMessage<P>[] = [];
@@ -18,7 +19,7 @@ export class ActionMessageServiceDemo<P extends Principal> implements ActionMess
         // tslint:disable-next-line:no-console
         console.log(
             'ActionMessage Type:' +
-                actionMessage.actionType +
+                getActionTypeName(actionMessage.actionType) +
                 ' To [' +
                 actionMessage.principal.username +
                 '] with token [' +

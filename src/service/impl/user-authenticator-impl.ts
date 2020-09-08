@@ -20,7 +20,11 @@ export class UserAuthenticatorImpl<P extends Principal> implements UserAuthentic
 
     public async authenticateUser(claim: PasswordAuthClaim): Promise<AuthResult<P>> {
         const user = await this._principalDao.getPrincipal(claim.user);
-        if (user != null && (await this._secureHash.verifyHash(claim.password, user.encryptedPassword))) {
+        if (
+            user != null &&
+            user.isVerified &&
+            (await this._secureHash.verifyHash(claim.password, user.encryptedPassword))
+        ) {
             return {
                 isAuthenticated: true,
                 principal: user,

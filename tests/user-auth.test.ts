@@ -3,7 +3,7 @@ import { UserAuthenticatorImpl } from '../src/service/impl/user-authenticator-im
 import { PrincipalDao } from '../src/dao/principal-dao';
 import { AuthToken, AuthTokenSecure, TokenType } from '../src/domain/auth-token';
 import { Principal } from '../src/domain/principal';
-import { createPasswordClaim } from '../src/domain/auth-claim';
+import { createPasswordAuthClaim } from '../src/domain/auth-claim';
 import moment from 'moment';
 
 describe('Test User Authentication', () => {
@@ -11,7 +11,8 @@ describe('Test User Authentication', () => {
     // Mock the token dao and date provider
     const PricipalDaoMocker = jest.fn<PrincipalDao<Principal>, [Principal]>((principal) => ({
         getPrincipal: jest.fn((key) => Promise.resolve(principal.username === key ? principal : null)),
-        savePrincipal: jest.fn()
+        savePrincipal: jest.fn(),
+        updatePrincipal: jest.fn()
     }));
 
     test('Test User Authenticator Success', async () => {
@@ -19,8 +20,8 @@ describe('Test User Authentication', () => {
         const username = 'testUser@test.com';
         const password = 'testpassword';
         const encryptedPassword = '$argon2id$v=19$m=65536,t=2,p=1$63rP0KVWybD9jDS5vCqlLA$2v8XhYF9m/y0yPMIese5IS7FxDBwT1XwjHJ0xzg8thE';
-        const testPrincipal = { username, encryptedPassword };
-        const testClaim = createPasswordClaim(username, password);
+        const testPrincipal = { username, encryptedPassword, isVerified: true };
+        const testClaim = createPasswordAuthClaim(username, password);
         // act
         const mockPrincipalDao = new PricipalDaoMocker(testPrincipal);
         const secureHash = new SecureHashImpl();

@@ -1,4 +1,9 @@
-import { AccessTokenAuthClaim, PasswordResetAuthClaim, RefreshAccessTokenAuthClaim, VerifyUserAuthClaim } from '../domain/auth-claim';
+import {
+    AccessTokenAuthClaim,
+    PasswordResetAuthClaim,
+    RefreshAccessTokenAuthClaim,
+    VerifyUserAuthClaim,
+} from '../domain/auth-claim';
 import { TokenAuthResult } from '../domain/auth-result';
 
 export interface TokenAuthenticator<P> {

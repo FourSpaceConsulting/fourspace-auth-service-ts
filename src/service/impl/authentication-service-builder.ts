@@ -37,13 +37,13 @@ export class AuthenticationServiceBuilder<P extends Principal> {
     private _randomStringGenerator: RandomStringGenerator;
     private _dateProvider: DateProvider;
     private _tokenLength: number = 30;
-    private _keyLength: number = 20;
+    private _keyLength: number = 8;
     private _expiryConfig: ExpiryConfig = {
         verifyExpiry: 60,
         passwordResetExpiry: 10,
         accessExpiry: 30,
         refreshExpiry: 180,
-    }
+    };
 
     public buildAuthenticationManager(): AuthenticationService<P> {
         const userAuthenticator = this.getUserAuthenticator();
@@ -66,6 +66,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * @return {PrincipalDao<P>}
      */
     private getPrincipalDao(): PrincipalDao<P> {
+        if (this._principalDao == null) {
+            this._principalDao = new PrincipalDaoDemo([]);
+        }
         return this._principalDao;
     }
 
@@ -74,9 +77,6 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * @param {PrincipalDao<P>} value
      */
     public setPrincipalDao(value: PrincipalDao<P>): AuthenticationServiceBuilder<P> {
-        if (this._principalDao == null) {
-            this._principalDao = new PrincipalDaoDemo([]);
-        }
         this._principalDao = value;
         return this;
     }
@@ -101,7 +101,6 @@ export class AuthenticationServiceBuilder<P extends Principal> {
         return this;
     }
 
-
     /**
      * Getter actionMessageService
      * @return {ActionMessageService<P>}
@@ -117,11 +116,10 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter actionMessageService
      * @param {ActionMessageService<P>} value
      */
-    public set actionMessageService(value: ActionMessageService<P>) {
+    public setActionMessageService(value: ActionMessageService<P>) {
         this._actionMessageService = value;
+        return this;
     }
-
-
 
     /**
      * Get secure hash or default version
@@ -138,8 +136,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter secureHash
      * @param {SecureHash} value
      */
-    public set secureHash(value: SecureHash) {
+    public setSecureHash(value: SecureHash) {
         this._secureHash = value;
+        return this;
     }
 
     /**
@@ -157,8 +156,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter userAuthenticator
      * @param {UserAuthenticator<P>} value
      */
-    public set userAuthenticator(value: UserAuthenticator<P>) {
+    public setUserAuthenticator(value: UserAuthenticator<P>) {
         this._userAuthenticator = value;
+        return this;
     }
 
     /**
@@ -180,8 +180,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter tokenAuthenticator
      * @param {TokenAuthenticator<P>} value
      */
-    public set tokenAuthenticator(value: TokenAuthenticator<P>) {
+    public setTokenAuthenticator(value: TokenAuthenticator<P>) {
         this._tokenAuthenticator = value;
+        return this;
     }
 
     /**
@@ -199,8 +200,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter tokenEncoder
      * @param {TokenEncoder} value
      */
-    public set tokenEncoder(value: TokenEncoder) {
+    public setTokenEncoder(value: TokenEncoder) {
         this._tokenEncoder = value;
+        return this;
     }
 
     /**
@@ -225,8 +227,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter tokenCreator
      * @param {TokenCreator<P>} value
      */
-    public set tokenCreator(value: TokenCreator<P>) {
+    public setTokenCreator(value: TokenCreator<P>) {
         this._tokenCreator = value;
+        return this;
     }
 
     /**
@@ -244,8 +247,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter tokenKeyCreator
      * @param {TokenKeyCreator<P>} value
      */
-    public set tokenKeyCreator(value: TokenKeyCreator<P>) {
+    public setTokenKeyCreator(value: TokenKeyCreator<P>) {
         this._tokenKeyCreator = value;
+        return this;
     }
 
     /**
@@ -260,8 +264,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter keyLength
      * @param {number} value
      */
-    public set keyLength(value: number) {
+    public setKeyLength(value: number) {
         this._keyLength = value;
+        return this;
     }
 
     /**
@@ -279,8 +284,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter randomStringGenerator
      * @param {RandomStringGenerator} value
      */
-    public set randomStringGenerator(value: RandomStringGenerator) {
+    public setRandomStringGenerator(value: RandomStringGenerator) {
         this._randomStringGenerator = value;
+        return this;
     }
 
     /**
@@ -298,8 +304,9 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter dateProvider
      * @param {DateProvider} value
      */
-    public set dateProvider(value: DateProvider) {
+    public setDateProvider(value: DateProvider) {
         this._dateProvider = value;
+        return this;
     }
 
     /**
@@ -314,10 +321,10 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter tokenLength
      * @param {number } value
      */
-    public set tokenLength(value: number) {
+    public setTokenLength(value: number) {
         this._tokenLength = value;
+        return this;
     }
-
 
     /**
      * Getter expiryConfig
@@ -331,9 +338,8 @@ export class AuthenticationServiceBuilder<P extends Principal> {
      * Setter expiryConfig
      * @param {ExpiryConfig } value
      */
-    public set expiryConfig(value: ExpiryConfig) {
+    public setExpiryConfig(value: ExpiryConfig) {
         this._expiryConfig = value;
+        return this;
     }
-
-
 }

@@ -7,10 +7,10 @@ type ApiRouteAdapter = (r: string) => string;
 
 /**
  * Create the authentication routes for the express server
- * @param routeAdapter 
- * @param authHandlers 
- * @param validationHandlers 
- * @param c 
+ * @param routeAdapter
+ * @param authHandlers
+ * @param validationHandlers
+ * @param c
  */
 export const authRoutes = <P>(
     routeAdapter: ApiRouteAdapter,

@@ -1,16 +1,23 @@
-import { ApiMethod, SendResult } from './express-util';
+import { ApiMethod, SendResult, RouteConfiguration } from './express-util';
 import { AuthController } from './auth-controller';
 import { AuthHandlers } from './auth-handlers';
 import { ValidationHandlers } from './validation-handlers';
 
 type ApiRouteAdapter = (r: string) => string;
 
+/**
+ * Create the authentication routes for the express server
+ * @param routeAdapter 
+ * @param authHandlers 
+ * @param validationHandlers 
+ * @param c 
+ */
 export const authRoutes = <P>(
     routeAdapter: ApiRouteAdapter,
     authHandlers: AuthHandlers,
     validationHandlers: ValidationHandlers,
     c: AuthController
-) => {
+): RouteConfiguration[] => {
     return [
         {
             path: routeAdapter('/auth/register'),

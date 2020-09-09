@@ -112,6 +112,29 @@ There are multiple tokens used to authenticate certain activities
 * Reset Token - allows a user to reset a forgotten password (email reset workflow)
 * Remember Token - token for remaining signed in despite inactivity (no expiry)
 
+## Service Implementations
+
+TokenDao
+Verify user - only one token per user at any time
+1) create verification token (deletes all other verify tokens for this user)
+2) send to user
+3) user clicks link
+4) token authenticated and then deleted (can only verify once with this token)
+5) user updated
+
+if at 4) authenticated and another API call creates verification token, then current token is already deleted
+
+Reset password
+1) create reset token (deletes all other reset tokens for this user)
+2) send to user
+3) user follows link
+4) token authenticated and deleted (can only be attempted once with this token)
+5) password reset
+
+if (before 4) another API calls create reset token, then token is no longer valid
+if at (4) authenticated and another API call creates reset token, then current token is already deleted
+
+
 ## Install
 
 ```sh

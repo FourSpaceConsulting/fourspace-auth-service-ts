@@ -4,11 +4,9 @@ import {
     GetUserContextPrincipal,
     GetActionContextPrincipal,
 } from './express-util';
-import { AccessTokenResponse, AuthTokenSecure } from '../domain/auth-token';
+import { AccessTokenResponse } from '../domain/auth-token';
 import { AuthenticationService } from '../service/authentication-service';
-import { RegisterRequest } from '../domain/register-request';
 import { RequestUserMapper } from './request-user-mapper';
-import { ActionSecurityContext, UserSecurityContext } from '../domain/security-context';
 import { UsernameGetter, PasswordGetter } from './validation-handlers';
 import { ExceptionService } from './exception-service';
 
@@ -25,6 +23,9 @@ export interface AuthController {
     performPasswordReset(r: ExpressLikeRequest): Promise<boolean>;
 }
 
+/**
+ * Implementation using the authentication service
+ */
 export class AuthControllerImpl<P> implements AuthController {
     private readonly _authenticationService: AuthenticationService<P>;
     private readonly _requestUserMapper: RequestUserMapper<P>;
@@ -97,7 +98,7 @@ export class AuthControllerImpl<P> implements AuthController {
         const principal = GetActionContextPrincipal<P>(r, this._exceptionService);
         // get the password for the request
         const password = PasswordGetter(r);
-        // delete this token
+        // delete this token - password reset should only be allowed once
         // reset the password
         const response = await this._authenticationService.resetPassword(principal, password);
         // return the response

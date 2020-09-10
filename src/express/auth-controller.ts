@@ -1,14 +1,10 @@
-import {
-    ExpressLikeRequest,
-    GetActionContextToken,
-    GetUserContextPrincipal,
-    GetActionContextPrincipal,
-} from './express-util';
+import { getActionContextToken, getUserContextPrincipal, getActionContextPrincipal } from './request-util';
 import { AccessTokenResponse } from '../domain/auth-token';
 import { AuthenticationService } from '../service/authentication-service';
 import { RequestUserMapper } from './request-user-mapper';
 import { UsernameGetter, PasswordGetter } from './validation-handlers';
-import { ExceptionService } from './exception-service';
+import { AuthExceptionService } from './exception-service';
+import { ExpressLikeRequest } from './express-interface';
 
 /**
  * Controller for all authorisation action API requests
@@ -29,12 +25,12 @@ export interface AuthController {
 export class AuthControllerImpl<P> implements AuthController {
     private readonly _authenticationService: AuthenticationService<P>;
     private readonly _requestUserMapper: RequestUserMapper<P>;
-    private readonly _exceptionService: ExceptionService;
+    private readonly _exceptionService: AuthExceptionService;
 
     constructor(
         authenticationService: AuthenticationService<P>,
         requestUserMapper: RequestUserMapper<P>,
-        exceptionService: ExceptionService
+        exceptionService: AuthExceptionService
     ) {
         this._authenticationService = authenticationService;
         this._requestUserMapper = requestUserMapper;
@@ -55,7 +51,7 @@ export class AuthControllerImpl<P> implements AuthController {
 
     public async verifyUser(r: ExpressLikeRequest): Promise<boolean> {
         // get the principal from the security context
-        const principal = GetActionContextPrincipal<P>(r, this._exceptionService);
+        const principal = getActionContextPrincipal<P>(r, this._exceptionService);
         // delete this token - verification can only happen once
         // verify the user
         const verify = await this._authenticationService.verifyUser(principal);
@@ -64,21 +60,21 @@ export class AuthControllerImpl<P> implements AuthController {
 
     public async logIn(r: ExpressLikeRequest): Promise<AccessTokenResponse> {
         // get the principal from the security context
-        const principal = GetUserContextPrincipal<P>(r, this._exceptionService);
+        const principal = getUserContextPrincipal<P>(r, this._exceptionService);
         // create the tokens for this principal
         return this._authenticationService.createAccessToken(principal);
     }
 
     public refreshToken(r: ExpressLikeRequest): Promise<AccessTokenResponse> {
         // get the refresh token from the security context
-        const token = GetActionContextToken<P>(r, this._exceptionService);
+        const token = getActionContextToken<P>(r, this._exceptionService);
         // refresh the access token
         return this._authenticationService.refreshAccessToken(token);
     }
 
     public logOut(r: ExpressLikeRequest): Promise<boolean> {
         // get the refresh token from the security context
-        const token = GetActionContextToken<P>(r, this._exceptionService);
+        const token = getActionContextToken<P>(r, this._exceptionService);
         // revoke the token
         return this._authenticationService.revokeRefreshToken(token);
     }
@@ -95,7 +91,7 @@ export class AuthControllerImpl<P> implements AuthController {
 
     public async performPasswordReset(r: ExpressLikeRequest): Promise<boolean> {
         // get the principal from the security context
-        const principal = GetActionContextPrincipal<P>(r, this._exceptionService);
+        const principal = getActionContextPrincipal<P>(r, this._exceptionService);
         // get the password for the request
         const password = PasswordGetter(r);
         // delete this token - password reset should only be allowed once

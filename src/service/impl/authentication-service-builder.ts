@@ -45,7 +45,7 @@ export class AuthenticationServiceBuilder<P extends Principal> {
         refreshExpiry: 180,
     };
 
-    public buildAuthenticationManager(): AuthenticationService<P> {
+    public buildAuthenticationService(): AuthenticationService<P> {
         const userAuthenticator = this.getUserAuthenticator();
         const tokenAuthenticator = this.getTokenAuthenticator();
         const tokenCreator = this.getTokenCreator();

@@ -1,7 +1,8 @@
-import { ApiMethod, SendResult, RouteConfiguration } from './express-util';
+import { ApiMethod, RouteConfiguration } from './express-interface';
+import * as Util from './request-util';
 import { AuthController } from './auth-controller';
 import { AuthHandlers } from './auth-handlers';
-import { ValidationHandlers } from './validation-handlers';
+import { AuthValidationHandlers } from './validation-handlers';
 
 type ApiRouteAdapter = (r: string) => string;
 
@@ -12,10 +13,10 @@ type ApiRouteAdapter = (r: string) => string;
  * @param validationHandlers
  * @param c
  */
-export const authRoutes = <P>(
+export const createAuthenticationRoutes = <P>(
     routeAdapter: ApiRouteAdapter,
     authHandlers: AuthHandlers,
-    validationHandlers: ValidationHandlers,
+    validationHandlers: AuthValidationHandlers,
     c: AuthController
 ): RouteConfiguration[] => {
     return [
@@ -26,7 +27,7 @@ export const authRoutes = <P>(
                 // no auth required for this action, but verify body values
                 validationHandlers.validateInitialUsernameAndPassword,
                 // perform action
-                SendResult(r => c.registerUser(r)),
+                Util.sendResult(r => c.registerUser(r)),
             ],
         },
         {
@@ -36,7 +37,7 @@ export const authRoutes = <P>(
                 // authenticate the verification claim
                 authHandlers.authenticateVerifyClaim,
                 // perform action
-                SendResult(r => c.verifyUser(r)),
+                Util.sendResult(r => c.verifyUser(r)),
             ],
         },
         {
@@ -46,7 +47,7 @@ export const authRoutes = <P>(
                 // authenticate the login claim
                 authHandlers.authenticatePasswordClaim,
                 // perform action
-                SendResult(r => c.logIn(r)),
+                Util.sendResult(r => c.logIn(r)),
             ],
         },
         {
@@ -56,7 +57,7 @@ export const authRoutes = <P>(
                 // authenticate the login claim
                 authHandlers.authenticateTokenRefreshClaim,
                 // perform action
-                SendResult(r => c.logOut(r)),
+                Util.sendResult(r => c.logOut(r)),
             ],
         },
         {
@@ -66,7 +67,7 @@ export const authRoutes = <P>(
                 // authenticate the login claim
                 authHandlers.authenticateTokenRefreshClaim,
                 // perform action
-                SendResult(r => c.refreshToken(r)),
+                Util.sendResult(r => c.refreshToken(r)),
             ],
         },
         {
@@ -76,7 +77,7 @@ export const authRoutes = <P>(
                 // no authentication required for this action, but validate the username
                 validationHandlers.validateUsername,
                 // perform action
-                SendResult(r => c.requestPasswordReset(r)),
+                Util.sendResult(r => c.requestPasswordReset(r)),
             ],
         },
         {
@@ -88,7 +89,7 @@ export const authRoutes = <P>(
                 // validate the password
                 validationHandlers.validatePassword,
                 // perform action
-                SendResult(r => c.performPasswordReset(r)),
+                Util.sendResult(r => c.performPasswordReset(r)),
             ],
         },
     ];

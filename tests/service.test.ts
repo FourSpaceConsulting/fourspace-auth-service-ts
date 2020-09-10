@@ -36,7 +36,7 @@ describe('Test Service', () => {
         const service = new AuthenticationServiceBuilder()
             .setPrincipalDao(mockPrincipalDao)
             .setTokenDao(mockTokenDao)
-            .buildAuthenticationManager();
+            .buildAuthenticationService();
         const context = await service.authenticatePasswordClaim(testPasswordClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(0);
@@ -55,7 +55,7 @@ describe('Test Service', () => {
         // act
         const service = new AuthenticationServiceBuilder()
             .setPrincipalDao(new PrincipalDaoDemo([testPrincipal]))
-            .buildAuthenticationManager();
+            .buildAuthenticationService();
         const passwordContext = await service.authenticatePasswordClaim(testPasswordClaim);
         const newToken = await service.createAccessToken(passwordContext.principal);
         const tokenContext = await service.authenticateAccessTokenClaim(createAccessTokenAuthClaim(newToken.accessToken));
@@ -75,7 +75,7 @@ describe('Test Service', () => {
         // act
         const service = new AuthenticationServiceBuilder()
             .setPrincipalDao(new PrincipalDaoDemo([testPrincipal]))
-            .buildAuthenticationManager();
+            .buildAuthenticationService();
         const response = await service.requestResetPassword({ username, origin: 'Test' });
         const resetAuth = await service.authenticatePasswordResetClaim(createPasswordResetAuthClaim(response.encodedToken));
         const resetSuccess = await service.resetPassword(resetAuth.authToken.principal, newPassword);
@@ -108,7 +108,7 @@ describe('Test Service', () => {
             .setActionMessageService(actionMessageService)
             .setPrincipalDao(principalDao)
             .setTokenDao(tokenDao)
-            .buildAuthenticationManager();
+            .buildAuthenticationService();
         // 1 - Register new user and fail log in if not verified
         const registerResponse = await service.createUserAndSendVerificationMessage({ newPrincipal: testPrincipal, password: initialPassword });
         expect(registerResponse.isSuccess).toBeTruthy();

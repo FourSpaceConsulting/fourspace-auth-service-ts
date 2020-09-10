@@ -1,29 +1,30 @@
-import { CreateBodyGetter, ExpressLikeRouteHandler } from './express-util';
-import { ExceptionService } from './exception-service';
+import { ExpressLikeRequestHandler } from './express-interface';
+import { AuthExceptionService } from './exception-service';
+import { createBodyGetter } from './request-util';
 
 // Authentication parameter names
 export const UsernameParameter = 'username';
 export const PasswordParameter = 'password';
 
 // Request body getters
-export const UsernameGetter = CreateBodyGetter(UsernameParameter);
-export const PasswordGetter = CreateBodyGetter(PasswordParameter);
+export const UsernameGetter = createBodyGetter(UsernameParameter);
+export const PasswordGetter = createBodyGetter(PasswordParameter);
 
 /**
  * These are the express handlers for validating values in the request
  */
-export interface ValidationHandlers {
-    readonly validateInitialUsernameAndPassword: ExpressLikeRouteHandler;
-    readonly validateUsername: ExpressLikeRouteHandler;
-    readonly validatePassword: ExpressLikeRouteHandler;
+export interface AuthValidationHandlers {
+    readonly validateInitialUsernameAndPassword: ExpressLikeRequestHandler;
+    readonly validateUsername: ExpressLikeRequestHandler;
+    readonly validatePassword: ExpressLikeRequestHandler;
 }
 
-export class ValidationHandlersImpl implements ValidationHandlers {
-    private _validateInitialUsernameAndPassword: ExpressLikeRouteHandler;
-    private _validateUsername: ExpressLikeRouteHandler;
-    private _validatePassword: ExpressLikeRouteHandler;
+export class ValidationHandlersImpl implements AuthValidationHandlers {
+    private _validateInitialUsernameAndPassword: ExpressLikeRequestHandler;
+    private _validateUsername: ExpressLikeRequestHandler;
+    private _validatePassword: ExpressLikeRequestHandler;
 
-    constructor(ex: ExceptionService) {
+    constructor(ex: AuthExceptionService) {
         this._setInitialUsernameAndPasswordHandler(ex);
         this._setUsernameHandler(ex);
         this._setPasswordHandler(ex);
@@ -31,37 +32,37 @@ export class ValidationHandlersImpl implements ValidationHandlers {
 
     /**
      * Getter initialUsernameAndPassword
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get validateInitialUsernameAndPassword(): ExpressLikeRouteHandler {
+    public get validateInitialUsernameAndPassword(): ExpressLikeRequestHandler {
         return this._validateInitialUsernameAndPassword;
     }
 
     /**
      * Getter validateUsername
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get validateUsername(): ExpressLikeRouteHandler {
+    public get validateUsername(): ExpressLikeRequestHandler {
         return this._validateUsername;
     }
 
     /**
      * Getter validatePassword
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get validatePassword(): ExpressLikeRouteHandler {
+    public get validatePassword(): ExpressLikeRequestHandler {
         return this._validatePassword;
     }
 
     //#endregion
     //#region --- Create the handlers
 
-    private _setInitialUsernameAndPasswordHandler(ex: ExceptionService) {
+    private _setInitialUsernameAndPasswordHandler(ex: AuthExceptionService) {
         this._validateInitialUsernameAndPassword = async (req, _, next) => {
             // validate
             const username = UsernameGetter(req);
             const password = PasswordGetter(req);
-            if (!isValidUsername(username) || isValidUsername(password)) {
+            if (!isValidUsername(username) || !isValidUsername(password)) {
                 ex.throwBadRequest('Invalid username or password');
             }
             // next
@@ -69,7 +70,7 @@ export class ValidationHandlersImpl implements ValidationHandlers {
         };
     }
 
-    private _setUsernameHandler(ex: ExceptionService) {
+    private _setUsernameHandler(ex: AuthExceptionService) {
         this._validateUsername = async (req, _, next) => {
             // validate
             const username = UsernameGetter(req);
@@ -80,11 +81,11 @@ export class ValidationHandlersImpl implements ValidationHandlers {
         };
     }
 
-    private _setPasswordHandler(ex: ExceptionService) {
+    private _setPasswordHandler(ex: AuthExceptionService) {
         this._validatePassword = async (req, _, next) => {
             // validate
             const password = PasswordGetter(req);
-            if (isValidUsername(password)) {
+            if (!isValidUsername(password)) {
                 ex.throwBadRequest('Invalid password');
             }
         };

@@ -46,6 +46,5 @@ export * from './express/auth-controller';
 export * from './express/auth-handlers';
 export * from './express/auth-routes';
 export * from './express/exception-service';
-export * from './express/express-util';
 export * from './express/request-user-mapper';
 export * from './express/validation-handlers';

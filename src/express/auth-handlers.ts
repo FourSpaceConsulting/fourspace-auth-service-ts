@@ -1,4 +1,4 @@
-import { ExpressLikeRouteHandler, ExpressLikeRequest, GetAuthorizationHeader } from './express-util';
+import { ExpressLikeRequestHandler, ExpressLikeRequest } from './express-interface';
 import { AuthenticationService } from '../service/authentication-service';
 import {
     createPasswordAuthClaim,
@@ -7,31 +7,32 @@ import {
     createRefreshAccessTokenAuthClaim,
     createVerifyUserAuthClaim,
 } from '../domain/auth-claim';
-import { ExceptionService } from './exception-service';
+import { AuthExceptionService } from './exception-service';
 import { UsernameGetter, PasswordGetter } from './validation-handlers';
+import { getAuthorizationHeader } from './request-util';
 
 /**
  * These are the express handlers for authenticating various claims
  */
 export interface AuthHandlers {
-    readonly authenticatePasswordClaim: ExpressLikeRouteHandler;
-    readonly authenticateAccessTokenClaim: ExpressLikeRouteHandler;
-    readonly authenticateVerifyClaim: ExpressLikeRouteHandler;
-    readonly authenticateTokenRefreshClaim: ExpressLikeRouteHandler;
-    readonly authenticatePasswordResetClaim: ExpressLikeRouteHandler;
+    readonly authenticatePasswordClaim: ExpressLikeRequestHandler;
+    readonly authenticateAccessTokenClaim: ExpressLikeRequestHandler;
+    readonly authenticateVerifyClaim: ExpressLikeRequestHandler;
+    readonly authenticateTokenRefreshClaim: ExpressLikeRequestHandler;
+    readonly authenticatePasswordResetClaim: ExpressLikeRequestHandler;
 }
 
 /**
  * Handler implementation
  */
 export class AuthHandlerImpl<P> implements AuthHandlers {
-    private _authenticatePasswordClaim: ExpressLikeRouteHandler;
-    private _authenticateAccessTokenClaim: ExpressLikeRouteHandler;
-    private _authenticateVerifyClaim: ExpressLikeRouteHandler;
-    private _authenticateTokenRefreshClaim: ExpressLikeRouteHandler;
-    private _authenticatePasswordResetClaim: ExpressLikeRouteHandler;
+    private _authenticatePasswordClaim: ExpressLikeRequestHandler;
+    private _authenticateAccessTokenClaim: ExpressLikeRequestHandler;
+    private _authenticateVerifyClaim: ExpressLikeRequestHandler;
+    private _authenticateTokenRefreshClaim: ExpressLikeRequestHandler;
+    private _authenticatePasswordResetClaim: ExpressLikeRequestHandler;
 
-    constructor(service: AuthenticationService<P>, ex: ExceptionService) {
+    constructor(service: AuthenticationService<P>, ex: AuthExceptionService) {
         this._setAuthenticatePasswordClaimHandler(service, ex);
         this._setAuthenticateAccessTokenClaimHandler(service, ex);
         this._setAuthenticateTokenRefreshClaimHandler(service, ex);
@@ -43,48 +44,48 @@ export class AuthHandlerImpl<P> implements AuthHandlers {
 
     /**
      * Getter authenticatePasswordClaim
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get authenticatePasswordClaim(): ExpressLikeRouteHandler {
+    public get authenticatePasswordClaim(): ExpressLikeRequestHandler {
         return this._authenticatePasswordClaim;
     }
 
     /**
      * Getter authenticateAccessTokenClaim
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get authenticateAccessTokenClaim(): ExpressLikeRouteHandler {
+    public get authenticateAccessTokenClaim(): ExpressLikeRequestHandler {
         return this._authenticateAccessTokenClaim;
     }
 
     /**
      * Getter authenticateVerifyClaim
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get authenticateVerifyClaim(): ExpressLikeRouteHandler {
+    public get authenticateVerifyClaim(): ExpressLikeRequestHandler {
         return this._authenticateVerifyClaim;
     }
 
     /**
      * Getter authenticateTokenRefreshClaim
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get authenticateTokenRefreshClaim(): ExpressLikeRouteHandler {
+    public get authenticateTokenRefreshClaim(): ExpressLikeRequestHandler {
         return this._authenticateTokenRefreshClaim;
     }
 
     /**
      * Getter authenticatePasswordResetClaim
-     * @return {ExpressLikeRouteHandler}
+     * @return {ExpressLikeRequestHandler}
      */
-    public get authenticatePasswordResetClaim(): ExpressLikeRouteHandler {
+    public get authenticatePasswordResetClaim(): ExpressLikeRequestHandler {
         return this._authenticatePasswordResetClaim;
     }
 
     //#endregion
     //#region --- Create the handlers
 
-    private _setAuthenticatePasswordClaimHandler(service: AuthenticationService<P>, ex: ExceptionService) {
+    private _setAuthenticatePasswordClaimHandler(service: AuthenticationService<P>, ex: AuthExceptionService) {
         this._authenticatePasswordClaim = async (req, _, next) => {
             // authenticate
             const claim = createPasswordAuthClaim(UsernameGetter(req), PasswordGetter(req));
@@ -96,10 +97,10 @@ export class AuthHandlerImpl<P> implements AuthHandlers {
         };
     }
 
-    private _setAuthenticateAccessTokenClaimHandler(service: AuthenticationService<P>, ex: ExceptionService) {
+    private _setAuthenticateAccessTokenClaimHandler(service: AuthenticationService<P>, ex: AuthExceptionService) {
         this._authenticateAccessTokenClaim = async (req, _, next) => {
             // authenticate
-            const claim = createAccessTokenAuthClaim(GetAuthorizationHeader(req));
+            const claim = createAccessTokenAuthClaim(getAuthorizationHeader(req));
             req.securityContext = await service.authenticateAccessTokenClaim(claim);
             // advance
             if (!throwIfNotAuthenticated(req, ex)) {
@@ -108,10 +109,10 @@ export class AuthHandlerImpl<P> implements AuthHandlers {
         };
     }
 
-    private _setAuthenticatePasswordResetClaimHandler(service: AuthenticationService<P>, ex: ExceptionService) {
+    private _setAuthenticatePasswordResetClaimHandler(service: AuthenticationService<P>, ex: AuthExceptionService) {
         this._authenticatePasswordResetClaim = async (req, _, next) => {
             // authenticate
-            const claim = createPasswordResetAuthClaim(GetAuthorizationHeader(req));
+            const claim = createPasswordResetAuthClaim(getAuthorizationHeader(req));
             req.securityContext = await service.authenticatePasswordResetClaim(claim);
             // advance
             if (!throwIfNotAuthenticated(req, ex)) {
@@ -120,10 +121,10 @@ export class AuthHandlerImpl<P> implements AuthHandlers {
         };
     }
 
-    private _setAuthenticateTokenRefreshClaimHandler(service: AuthenticationService<P>, ex: ExceptionService) {
+    private _setAuthenticateTokenRefreshClaimHandler(service: AuthenticationService<P>, ex: AuthExceptionService) {
         this._authenticateTokenRefreshClaim = async (req, _, next) => {
             // authenticate
-            const claim = createRefreshAccessTokenAuthClaim(GetAuthorizationHeader(req));
+            const claim = createRefreshAccessTokenAuthClaim(getAuthorizationHeader(req));
             req.securityContext = await service.authenticateTokenRefreshClaim(claim);
             // advance
             if (!throwIfNotAuthenticated(req, ex)) {
@@ -132,10 +133,10 @@ export class AuthHandlerImpl<P> implements AuthHandlers {
         };
     }
 
-    private _setAuthenticateVerifyClaimHandler(service: AuthenticationService<P>, ex: ExceptionService) {
+    private _setAuthenticateVerifyClaimHandler(service: AuthenticationService<P>, ex: AuthExceptionService) {
         this._authenticateVerifyClaim = async (req, _, next) => {
             // authenticate
-            const claim = createVerifyUserAuthClaim(GetAuthorizationHeader(req));
+            const claim = createVerifyUserAuthClaim(getAuthorizationHeader(req));
             req.securityContext = await service.authenticateVerifyClaim(claim);
             // advance
             if (!throwIfNotAuthenticated(req, ex)) {
@@ -147,6 +148,6 @@ export class AuthHandlerImpl<P> implements AuthHandlers {
     //#endregion
 }
 
-function throwIfNotAuthenticated(req: ExpressLikeRequest, ex: ExceptionService): boolean {
+function throwIfNotAuthenticated(req: ExpressLikeRequest, ex: AuthExceptionService): boolean {
     return !(req.securityContext.isAuthenticated || ex.throwUnauthenticated());
 }

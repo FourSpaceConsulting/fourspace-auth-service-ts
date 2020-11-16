@@ -169,7 +169,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         // save the principal
         const savedPrincipal = await this._principalDao.savePrincipal(principal);
         // create new token
-        const verifyToken = await this._saveToken(await this._tokenCreator.createVerifyToken(principal));
+        const verifyToken = await this._saveToken(await this._tokenCreator.createVerifyToken(savedPrincipal));
         // encode
         const encodedToken = this._tokenEncoder.encode(getTokenInfo(verifyToken));
         // send action message
@@ -233,7 +233,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
     public async verifyUser(principal: P): Promise<boolean> {
         principal.isVerified = true;
         const saved = await this._principalDao.updatePrincipal(principal);
-        return saved.isVerified;
+        return saved.isVerified ?? false;
     }
 
     /**

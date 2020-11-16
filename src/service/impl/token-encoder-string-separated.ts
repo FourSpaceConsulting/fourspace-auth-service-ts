@@ -9,8 +9,8 @@ export class TokenEncoderStringSeparated implements TokenEncoder {
     }
 
     public decode(token: string): TokenInfo {
-        const [tokenKey, tokenValue, expiry] = token.split(this._separator);
-        const expire = Buffer.from(expiry, 'base64').readDoubleBE();
+        const [tokenKey, tokenValue, expiry] = token == null ? [null, null, null] : token.split(this._separator);
+        const expire = expiry == null ? 0 : Buffer.from(expiry, 'base64').readDoubleBE();
         return { tokenKey, tokenValue, expire };
     }
 

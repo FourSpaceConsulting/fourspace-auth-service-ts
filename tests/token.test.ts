@@ -57,6 +57,16 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         return creator;
     }
 
+    test('Test token decode null safe', () => {
+        const encoder = new TokenEncoderStringSeparated('.');
+        // act
+        const decoded = encoder.decode(undefined);
+        // assert
+        expect(decoded.tokenKey).toBeNull();
+        expect(decoded.tokenValue).toBeNull();
+        expect(decoded.expire).toBe(0);
+    });
+
 
     test('Test token encoder', () => {
         const encoder = new TokenEncoderStringSeparated('.');

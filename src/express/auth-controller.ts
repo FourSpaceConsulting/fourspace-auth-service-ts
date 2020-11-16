@@ -41,6 +41,8 @@ export class AuthControllerImpl<P> implements AuthController {
         // get the user from the request
         const newPrincipal = this._requestUserMapper.createNewUser(r.body);
         const password = r.body.password;
+        //
+        if (newPrincipal == null) throw new Error('Failed to create principal');
         // register the user
         const response = await this._authenticationService.createUserAndSendVerificationMessage({
             newPrincipal,

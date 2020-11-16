@@ -16,12 +16,12 @@ import { createFailTokenResult } from '../util';
  * Authenticate users with a secure token
  */
 export class TokenAuthenticatorImpl<P> implements TokenAuthenticator<P> {
-    private readonly _tokenParser: TokenEncoder;
+    private readonly _tokenEncoder: TokenEncoder;
     private readonly _tokenDao: TokenDao<P>;
     private readonly _secureHash: SecureHash;
 
-    constructor(tokenParser: TokenEncoder, tokenDao: TokenDao<P>, secureHash: SecureHash) {
-        this._tokenParser = tokenParser;
+    constructor(tokenEncoder: TokenEncoder, tokenDao: TokenDao<P>, secureHash: SecureHash) {
+        this._tokenEncoder = tokenEncoder;
         this._tokenDao = tokenDao;
         this._secureHash = secureHash;
     }
@@ -48,7 +48,7 @@ export class TokenAuthenticatorImpl<P> implements TokenAuthenticator<P> {
 
     private async _authToken(encodedToken: string, tokenType: TokenType): Promise<TokenAuthResult<P>> {
         // decode the token and look up via the key
-        const tokenInfo = this._tokenParser.decode(encodedToken);
+        const tokenInfo = this._tokenEncoder.decode(encodedToken);
         const authToken = await this._tokenDao.getToken(tokenInfo.tokenKey);
         // if token found and types match, then verify the hash
         if (

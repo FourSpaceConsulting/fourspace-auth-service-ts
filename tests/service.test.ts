@@ -121,6 +121,7 @@ describe('Test Service', () => {
         const verifyAuth = await service.authenticateVerifyClaim(createVerifyUserAuthClaim(registerResponse.encodedToken));
         expect(verifyAuth.isAuthenticated).toBeTruthy();
         const verifySuccess = await service.verifyUser(verifyAuth.authToken.principal);
+        expect(verifyAuth.authToken.principal).toBeDefined();
         expect(verifySuccess).toBeTruthy();
         // 3 - log in and get tokens
         const initialPasswordAuth = await service.authenticatePasswordClaim(initialPasswordClaim);

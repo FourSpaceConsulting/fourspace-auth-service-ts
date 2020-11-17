@@ -14,7 +14,7 @@ export interface ExpressLikeRequest {
     headers: ExpressLikeIncomingHttpHeaders;
     params: ExpressLikeParamsDictionary;
     body: any;
-    securityContext?: SecurityContext<any>;
+    securityContext?: any;
 }
 export interface ExpressLikeResponse {
     status(code: number): this;

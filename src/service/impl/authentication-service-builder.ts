@@ -313,7 +313,6 @@ export class AuthenticationServiceBuilder<P extends Principal> {
         return this;
     }
 
-
     /**
      * Getter expiryChecker
      * @return {ExpiryChecker}
@@ -333,7 +332,6 @@ export class AuthenticationServiceBuilder<P extends Principal> {
         this._expiryChecker = value;
         return this;
     }
-
 
     /**
      * Getter tokenLength

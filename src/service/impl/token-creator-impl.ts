@@ -18,8 +18,8 @@ export interface ExpiryConfig {
 
 /**
  * Get the expiry minutes for a particular token type
- * @param expiryConfig 
- * @param type 
+ * @param expiryConfig
+ * @param type
  */
 export function getConfigExpiry(expiryConfig: ExpiryConfig, type: TokenType): number {
     switch (type) {

@@ -260,9 +260,9 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         const toSave = { ...token };
         delete toSave.plainToken;
         // persist
-        const secureToken = isUpdate ?
-            await this._tokenDao.updateToken(toSave) :
-            await this._tokenDao.saveToken(toSave);
+        const secureToken = isUpdate
+            ? await this._tokenDao.updateToken(toSave)
+            : await this._tokenDao.saveToken(toSave);
         // merge token, as the key may only be set on persistence
         return { ...token, ...secureToken };
     }

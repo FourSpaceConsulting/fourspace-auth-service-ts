@@ -1,4 +1,9 @@
-import { ActionSecurityContext, SecurityContext, SecurityContextType, UserSecurityContext } from '../domain/security-context';
+import {
+    ActionSecurityContext,
+    SecurityContext,
+    SecurityContextType,
+    UserSecurityContext,
+} from '../domain/security-context';
 import { AuthTokenSecure } from '../domain/auth-token';
 import { AuthExceptionService } from './exception-service';
 import { ExpressLikeRequest, ExpressLikeRequestHandler } from './express-interface';
@@ -40,7 +45,12 @@ export function getUserContextPrincipal<P>(r: ExpressLikeRequest, ex: AuthExcept
 
 export function getActionContextPrincipal<P>(r: ExpressLikeRequest, ex: AuthExceptionService): P {
     const context = r.securityContext as ActionSecurityContext<P>;
-    if (!context.isAuthenticated || context.contextType !== SecurityContextType.Action || context.authToken == null || context.authToken.principal == null) {
+    if (
+        !context.isAuthenticated ||
+        context.contextType !== SecurityContextType.Action ||
+        context.authToken == null ||
+        context.authToken.principal == null
+    ) {
         ex.throwInternalServer();
     }
     return context.authToken.principal;
@@ -48,7 +58,12 @@ export function getActionContextPrincipal<P>(r: ExpressLikeRequest, ex: AuthExce
 
 export function getActionContextToken<P>(r: ExpressLikeRequest, ex: AuthExceptionService): AuthTokenSecure<P> {
     const context = r.securityContext as ActionSecurityContext<P>;
-    if (!context.isAuthenticated || context.contextType !== SecurityContextType.Action || context.authToken == null || context.authToken.principal == null) {
+    if (
+        !context.isAuthenticated ||
+        context.contextType !== SecurityContextType.Action ||
+        context.authToken == null ||
+        context.authToken.principal == null
+    ) {
         ex.throwInternalServer();
     }
     return context.authToken;

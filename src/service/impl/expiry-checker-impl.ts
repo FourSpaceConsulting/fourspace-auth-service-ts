@@ -1,7 +1,7 @@
-import { TokenType } from "../../domain/auth-token";
-import { DateProvider } from "../date-provider";
-import { ExpiryChecker } from "../expiry-checker";
-import { ExpiryConfig } from "./token-creator-impl";
+import { TokenType } from '../../domain/auth-token';
+import { DateProvider } from '../date-provider';
+import { ExpiryChecker } from '../expiry-checker';
+import { ExpiryConfig } from './token-creator-impl';
 import moment from 'moment';
 
 /**
@@ -17,5 +17,4 @@ export class ExpiryCheckerImpl implements ExpiryChecker {
     public isValid(expiry: Date): boolean {
         return this._dateProvider.getDateTime() < expiry;
     }
-
 }

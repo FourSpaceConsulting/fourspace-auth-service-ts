@@ -22,7 +22,12 @@ export class TokenAuthenticatorImpl<P> implements TokenAuthenticator<P> {
     private readonly _secureHash: SecureHash;
     private readonly _expiryChecker: ExpiryChecker;
 
-    constructor(tokenEncoder: TokenEncoder, tokenDao: TokenDao<P>, secureHash: SecureHash, expiryChecker: ExpiryChecker) {
+    constructor(
+        tokenEncoder: TokenEncoder,
+        tokenDao: TokenDao<P>,
+        secureHash: SecureHash,
+        expiryChecker: ExpiryChecker
+    ) {
         this._tokenEncoder = tokenEncoder;
         this._tokenDao = tokenDao;
         this._secureHash = secureHash;

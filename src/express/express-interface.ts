@@ -1,7 +1,7 @@
 //#region --- Express Like interfaces
 //        --- These allow us to write express compatible code without actually having to import express
 
-import { SecurityContext } from "../domain/security-context";
+import { SecurityContext } from '../domain/security-context';
 
 export interface ExpressLikeParamsDictionary {
     [key: string]: string;

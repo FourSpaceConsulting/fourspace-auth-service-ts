@@ -20,6 +20,7 @@ describe('Test Service', () => {
     const TokenDaoMocker = jest.fn<TokenDao<Principal>, [AuthTokenSecure<Principal>]>((testToken) => ({
         getToken: jest.fn((key) => Promise.resolve(testToken.key === key ? testToken : null)),
         saveToken: jest.fn(),
+        updateToken: jest.fn(),
         deleteTokens: jest.fn()
     }));
 

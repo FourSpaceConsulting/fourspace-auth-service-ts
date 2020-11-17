@@ -11,6 +11,7 @@ import {
 import { TokenType } from '../../domain/auth-token';
 import { TokenAuthResult } from '../../domain/auth-result';
 import { createFailTokenResult } from '../util';
+import { ExpiryChecker } from '../expiry-checker';
 
 /**
  * Authenticate users with a secure token
@@ -19,11 +20,13 @@ export class TokenAuthenticatorImpl<P> implements TokenAuthenticator<P> {
     private readonly _tokenEncoder: TokenEncoder;
     private readonly _tokenDao: TokenDao<P>;
     private readonly _secureHash: SecureHash;
+    private readonly _expiryChecker: ExpiryChecker;
 
-    constructor(tokenEncoder: TokenEncoder, tokenDao: TokenDao<P>, secureHash: SecureHash) {
+    constructor(tokenEncoder: TokenEncoder, tokenDao: TokenDao<P>, secureHash: SecureHash, expiryChecker: ExpiryChecker) {
         this._tokenEncoder = tokenEncoder;
         this._tokenDao = tokenDao;
         this._secureHash = secureHash;
+        this._expiryChecker = expiryChecker;
     }
 
     public async authenticateVerifyToken(claim: VerifyUserAuthClaim): Promise<TokenAuthResult<P>> {
@@ -54,6 +57,7 @@ export class TokenAuthenticatorImpl<P> implements TokenAuthenticator<P> {
         if (
             authToken != null &&
             authToken.tokenType === tokenType &&
+            this._expiryChecker.isValid(authToken.expiry) &&
             (await this._secureHash.verifyHash(tokenInfo.tokenValue, authToken.encryptedToken))
         ) {
             return {

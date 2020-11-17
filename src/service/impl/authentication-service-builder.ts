@@ -23,6 +23,8 @@ import { PrincipalDaoDemo } from '../../dao/demo/principal-dao-demo';
 import { TokenDaoDemo } from '../../dao/demo/token-dao-demo';
 import { ActionMessageService } from '../../actions/action-message-service';
 import { ActionMessageServiceDemo } from '../../actions/demo/action-message-service-demo';
+import { ExpiryChecker } from '../expiry-checker';
+import { ExpiryCheckerImpl } from './expiry-checker-impl';
 
 export class AuthenticationServiceBuilder<P extends Principal> {
     private _principalDao: PrincipalDao<P>;
@@ -35,6 +37,7 @@ export class AuthenticationServiceBuilder<P extends Principal> {
     private _tokenCreator: TokenCreator<P>;
     private _tokenKeyCreator: TokenKeyCreator<P>;
     private _randomStringGenerator: RandomStringGenerator;
+    private _expiryChecker: ExpiryChecker;
     private _dateProvider: DateProvider;
     private _tokenLength: number = 30;
     private _keyLength: number = 8;
@@ -170,7 +173,8 @@ export class AuthenticationServiceBuilder<P extends Principal> {
             this._tokenAuthenticator = new TokenAuthenticatorImpl<P>(
                 this.getTokenEncoder(),
                 this.getTokenDao(),
-                this.getSecureHash()
+                this.getSecureHash(),
+                this.getExpiryChecker()
             );
         }
         return this._tokenAuthenticator;
@@ -308,6 +312,28 @@ export class AuthenticationServiceBuilder<P extends Principal> {
         this._dateProvider = value;
         return this;
     }
+
+
+    /**
+     * Getter expiryChecker
+     * @return {ExpiryChecker}
+     */
+    public getExpiryChecker(): ExpiryChecker {
+        if (this._expiryChecker == null) {
+            this._expiryChecker = new ExpiryCheckerImpl(this.getDateProvider());
+        }
+        return this._expiryChecker;
+    }
+
+    /**
+     * Setter expiryChecker
+     * @param {ExpiryChecker} value
+     */
+    public setExpiryChecker(value: ExpiryChecker) {
+        this._expiryChecker = value;
+        return this;
+    }
+
 
     /**
      * Getter tokenLength

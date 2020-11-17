@@ -15,6 +15,27 @@ export interface ExpiryConfig {
     accessExpiry: number;
     refreshExpiry: number;
 }
+
+/**
+ * Get the expiry minutes for a particular token type
+ * @param expiryConfig 
+ * @param type 
+ */
+export function getConfigExpiry(expiryConfig: ExpiryConfig, type: TokenType): number {
+    switch (type) {
+        case TokenType.AccessToken:
+            return expiryConfig.accessExpiry;
+        case TokenType.PasswordResetToken:
+            return expiryConfig.passwordResetExpiry;
+        case TokenType.RefreshToken:
+            return expiryConfig.refreshExpiry;
+        case TokenType.VerifyUser:
+            return expiryConfig.verifyExpiry;
+        default:
+            return 0;
+    }
+}
+
 /**
  * Token creator implementation
  */

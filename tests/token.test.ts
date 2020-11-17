@@ -1,4 +1,5 @@
 import { SecureHashImpl } from './../src/service/impl/secure-hash-impl';
+import { ExpiryCheckerImpl } from './../src/service/impl/expiry-checker-impl';
 import { TokenCreatorImpl } from './../src/service/impl/token-creator-impl';
 import { TokenAuthenticatorImpl } from './../src/service/impl/token-authenticator-impl';
 import { TokenKeyCreatorRandom } from './../src/service/impl/token-key-creator-random';
@@ -18,6 +19,7 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
     const TokenDaoMocker = jest.fn<TokenDao<Principal>, [AuthTokenSecure<Principal>]>((testToken) => ({
         getToken: jest.fn((key) => Promise.resolve(testToken.key === key ? testToken : null)),
         saveToken: jest.fn(),
+        updateToken: jest.fn(),
         deleteTokens: jest.fn()
     }));
     const DateProviderMocker = jest.fn<DateProvider, [Date]>((date) => ({
@@ -28,14 +30,13 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
     // get a valid test token
     function getTestToken(tokenType: TokenType): AuthToken<Principal> {
         const testUser = { username: 'testUser@test.com', encryptedPassword: '', isVerified: true };
-        const testDate: Date = moment(Date.UTC(2020, 1, 1)).toDate();
         return {
             key: 'IOhOX_7thgqJSbL8IzACweUcIP2D--',
             plainToken: 'RWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea',
             encryptedToken: '$argon2id$v=19$m=65536,t=2,p=1$lu1rT+rmvqkp0BhPRH2r9A$kHkGkE3pnZT7sAy3Y7V263hWGvqvcNaAi37rnzHfGdM',
-            created: testDate,
+            created: moment(Date.UTC(2020, 1, 1, 13)).toDate(),
             principal: testUser,
-            expiry: testDate,
+            expiry: moment(Date.UTC(2020, 1, 1, 14)).toDate(),
             tokenType,
         };
     }
@@ -55,6 +56,9 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
             refreshExpiry: TestRefreshExpiry,
         });
         return creator;
+    }
+    function createExpiryChecker(testDate: Date) {
+        return new ExpiryCheckerImpl(new DateProviderMocker(testDate));
     }
 
     test('Test token decode null safe', () => {
@@ -164,15 +168,35 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         const authToken = getTestToken(TokenType.AccessToken);
         const encoder = new TokenEncoderStringSeparated('.');
         const testClaim = createAccessTokenAuthClaim(encoder.encode(getTokenInfo(authToken)));
+        const testDate = moment(Date.UTC(2020, 1, 1, 13, 20)).toDate();
+        const expiryChecker = createExpiryChecker(testDate);
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
-        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
+        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash, expiryChecker);
         const context = await authenticator.authenticateAccessToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
         expect(context.isAuthenticated).toBeTruthy();
         expect(context.principal).toEqual(authToken.principal);
+    });
+
+    test('Test Token Authenticator Fail due to expiry', async () => {
+        // arrange
+        const authToken = getTestToken(TokenType.AccessToken);
+        const encoder = new TokenEncoderStringSeparated('.');
+        const testClaim = createAccessTokenAuthClaim(encoder.encode(getTokenInfo(authToken)));
+        const testDate = moment(Date.UTC(2020, 1, 1, 14, 1)).toDate();
+        const expiryChecker = createExpiryChecker(testDate);
+        // act
+        const mockTokenDao = new TokenDaoMocker(authToken);
+        const secureHash = new SecureHashImpl();
+        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash, expiryChecker);
+        const context = await authenticator.authenticateAccessToken(testClaim);
+        // assert
+        expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
+        expect(context.isAuthenticated).toBeFalsy();
+        expect(context.principal).toBe(null);
     });
 
     test('Test Token Authenticator Fail with Incorrect Key', async () => {
@@ -181,10 +205,12 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         const authToken = getTestToken(TokenType.AccessToken);
         const failAuthToken = { ...authToken, key: 'AOhOX_7thgqJSbL8IzACweUcIP2D--' };
         const testClaim = createAccessTokenAuthClaim(encoder.encode(getTokenInfo(failAuthToken)));
+        const testDate = moment(Date.UTC(2020, 1, 1, 14, 20)).toDate();
+        const expiryChecker = createExpiryChecker(testDate);
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
-        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
+        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash, expiryChecker);
         const context = await authenticator.authenticateAccessToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
@@ -198,10 +224,12 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         const authToken = getTestToken(TokenType.AccessToken);
         const failAuthToken = { ...authToken, plainToken: 'ZWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea' };
         const testClaim = createAccessTokenAuthClaim(encoder.encode(getTokenInfo(failAuthToken)));
+        const testDate = moment(Date.UTC(2020, 1, 1, 14, 20)).toDate();
+        const expiryChecker = createExpiryChecker(testDate);
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
-        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
+        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash, expiryChecker);
         const context = await authenticator.authenticateAccessToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
@@ -214,10 +242,12 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         const encoder = new TokenEncoderStringSeparated('.');
         const authToken = getTestToken(TokenType.RefreshToken);
         const testClaim = createAccessTokenAuthClaim(encoder.encode(getTokenInfo(authToken)));
+        const testDate = moment(Date.UTC(2020, 1, 1, 14, 20)).toDate();
+        const expiryChecker = createExpiryChecker(testDate);
         // act
         const mockTokenDao = new TokenDaoMocker(authToken);
         const secureHash = new SecureHashImpl();
-        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
+        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash, expiryChecker);
         const context = await authenticator.authenticateAccessToken(testClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);
@@ -232,6 +262,7 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         const testUser = { username: 'testUser@test.com', encryptedPassword: '', isVerified: true };
         const testDate = moment(Date.UTC(2020, 1, 1, 13)).toDate();
         const dateProvider = new DateProviderMocker(testDate);
+        const expiryChecker = createExpiryChecker(testDate);
         const tokenLength = 50;
         const keyLength = 30;
         // act
@@ -250,7 +281,7 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         const mockTokenDao = new TokenDaoMocker(authToken);
         // - authenticate encoded token 
         const tokenClaim = createAccessTokenAuthClaim(encoder.encode(getTokenInfo(authToken)));
-        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash);
+        const authenticator = new TokenAuthenticatorImpl(encoder, mockTokenDao, secureHash, expiryChecker);
         const context = await authenticator.authenticateAccessToken(tokenClaim);
         // assert
         expect(mockTokenDao.getToken).toHaveBeenCalledTimes(1);

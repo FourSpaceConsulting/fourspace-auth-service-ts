@@ -6,7 +6,7 @@ import {
     RefreshAccessTokenAuthClaim,
     VerifyUserAuthClaim,
 } from '../../domain/auth-claim';
-import { UserSecurityContext, ActionSecurityContext } from '../../domain/security-context';
+import { UserSecurityContext, ActionSecurityContext, SecurityContextType } from '../../domain/security-context';
 import { UserAuthenticator } from '../user-authenticator';
 import { TokenCreator } from '../token-creator';
 import { TokenAuthenticator } from '../token-authenticator';
@@ -71,6 +71,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         const result = await this._tokenAuthenticator.authenticateVerifyToken(claim);
         // return security context
         return {
+            contextType: SecurityContextType.Action,
             isAuthenticated: result.isAuthenticated,
             errorMessage: result.errorMessage,
             authClaim: claim,
@@ -83,6 +84,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         const result = await this._userAuthenticator.authenticateUser(claim);
         // return security context
         return {
+            contextType: SecurityContextType.User,
             isAuthenticated: result.isAuthenticated,
             principal: result.principal,
             errorMessage: result.errorMessage,
@@ -95,6 +97,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         const result = await this._tokenAuthenticator.authenticateAccessToken(claim);
         // return security context
         return {
+            contextType: SecurityContextType.User,
             isAuthenticated: result.isAuthenticated,
             principal: result.principal,
             errorMessage: result.errorMessage,
@@ -107,6 +110,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         const result = await this._tokenAuthenticator.authenticateRefreshToken(claim);
         // return security context
         return {
+            contextType: SecurityContextType.Action,
             isAuthenticated: result.isAuthenticated,
             errorMessage: result.errorMessage,
             authClaim: claim,
@@ -119,6 +123,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
         const result = await this._tokenAuthenticator.authenticatePasswordResetToken(claim);
         // return security context
         return {
+            contextType: SecurityContextType.Action,
             isAuthenticated: result.isAuthenticated,
             errorMessage: result.errorMessage,
             authClaim: claim,
@@ -142,7 +147,7 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
 
     public async refreshAccessToken(refreshToken: AuthTokenSecure<P>): Promise<AccessTokenResponse> {
         // update the refresh token
-        const newRefreshToken = await this._saveToken(await this._tokenCreator.updateRefreshToken(refreshToken));
+        const newRefreshToken = await this._saveToken(await this._tokenCreator.updateRefreshToken(refreshToken), true);
         // then create associated access token
         const accessToken = await this._saveToken(
             this._addAssociatedKey(
@@ -250,12 +255,14 @@ export class AuthenticationServiceImpl<P extends Principal> implements Authentic
      * return the auth token (with any values updated by the save action e.g. key)
      * @param token auth token
      */
-    private async _saveToken(token: AuthToken<P>): Promise<AuthToken<P>> {
+    private async _saveToken(token: AuthToken<P>, isUpdate: boolean = false): Promise<AuthToken<P>> {
         // remove plain token from object to be saved
         const toSave = { ...token };
         delete toSave.plainToken;
         // persist
-        const secureToken = await this._tokenDao.saveToken(toSave);
+        const secureToken = isUpdate ?
+            await this._tokenDao.updateToken(toSave) :
+            await this._tokenDao.saveToken(toSave);
         // merge token, as the key may only be set on persistence
         return { ...token, ...secureToken };
     }

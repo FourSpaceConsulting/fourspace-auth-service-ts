@@ -1,9 +1,7 @@
-import { ActionSecurityContext, UserSecurityContext } from '../domain/security-context';
-import { AuthTokenSecure } from '../domain/auth-token';
-import { AuthExceptionService } from './exception-service';
-
 //#region --- Express Like interfaces
 //        --- These allow us to write express compatible code without actually having to import express
+
+import { SecurityContext } from "../domain/security-context";
 
 export interface ExpressLikeParamsDictionary {
     [key: string]: string;
@@ -14,9 +12,9 @@ export interface ExpressLikeNextFunction {
 }
 export interface ExpressLikeRequest {
     headers: ExpressLikeIncomingHttpHeaders;
-    securityContext?: { isAuthenticated: boolean };
     params: ExpressLikeParamsDictionary;
     body: any;
+    securityContext?: SecurityContext<any>;
 }
 export interface ExpressLikeResponse {
     status(code: number): this;

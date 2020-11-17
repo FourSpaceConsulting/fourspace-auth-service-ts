@@ -37,10 +37,16 @@ export interface TokenDao<P> {
     getToken(key: string): Promise<AuthTokenSecure<P>>;
 
     /**
-     * save the auth token
+     * save a new auth token
      * @param token token
      */
     saveToken(token: AuthTokenSecure<P>): Promise<AuthTokenSecure<P>>;
+
+    /**
+     * update an existing auth token
+     * @param token token
+     */
+    updateToken(token: AuthTokenSecure<P>): Promise<AuthTokenSecure<P>>;
 
     /**
      * delete the auth token

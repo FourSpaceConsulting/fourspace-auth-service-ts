@@ -34,6 +34,10 @@ export class TokenDaoDemo<P extends Principal> implements TokenDao<P> {
         return this._storage.save(token);
     }
 
+    public updateToken(token: AuthTokenSecure<P>): Promise<AuthTokenSecure<P>> {
+        return this._storage.save(token);
+    }
+
     public deleteTokens(sc: SearchCriteria<P>): Promise<void> {
         switch (sc.searchType) {
             case TokenCriteriaSearchType.Token:

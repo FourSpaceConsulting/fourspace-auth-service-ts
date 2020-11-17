@@ -45,13 +45,3 @@ export const createFailResult = <P>(errorMessage: string): AuthResult<P> => ({
     isAuthenticated: false,
     principal: null,
 });
-
-export const createUnauthenticatedContext = <P>(
-    errorMessage: string,
-    authClaim: AuthClaim
-): UserSecurityContext<any> => ({
-    isAuthenticated: false,
-    principal: null,
-    errorMessage,
-    authClaim,
-});

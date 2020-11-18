@@ -89,6 +89,19 @@ describe('Test Token Creator, Authenticator and Encoder Implementations', () => 
         expect(decoded.expire).toEqual(tokenInfo.expire);
     });
 
+    test('Test token encoder from token', () => {
+        const encoder = new TokenEncoderStringSeparated('.');
+        const tokenInfo = getTokenInfo(getTestToken(TokenType.AccessToken));
+        // act
+        const encoded = encoder.encode(tokenInfo);
+        const decoded = encoder.decode(encoded);
+        // assert
+        expect(encoded).toEqual('IOhOX_7thgqJSbL8IzACweUcIP2D--.RWyzKLK2aQqTVnSOD_NdsY-bbY6b656oqkImx2H62Bq1M7r_ea.QdeNYRgAAAA=');
+        expect(decoded.tokenKey).toEqual(tokenInfo.tokenKey);
+        expect(decoded.tokenValue).toEqual(tokenInfo.tokenValue);
+        expect(decoded.expire).toEqual(tokenInfo.expire);
+    });
+
     test('Test create verify token', async () => {
         // arrange
         const testUser = { username: 'testUser@test.com', encryptedPassword: '', isVerified: true };

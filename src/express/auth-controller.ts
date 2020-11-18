@@ -39,10 +39,13 @@ export class AuthControllerImpl<P> implements AuthController {
 
     public async registerUser(r: ExpressLikeRequest): Promise<boolean> {
         // get the user from the request
+        if (!this._requestUserMapper.validateNewUser(r.body)) {
+            this._exceptionService.throwBadRequest('Invalid user object')
+        }
         const newPrincipal = this._requestUserMapper.createNewUser(r.body);
-        const password = r.body.password;
+        const password = PasswordGetter(r);
         //
-        if (newPrincipal == null) throw new Error('Failed to create principal');
+        if (newPrincipal == null) this._exceptionService.throwBadRequest('Unable to register user');
         // register the user
         const response = await this._authenticationService.createUserAndSendVerificationMessage({
             newPrincipal,

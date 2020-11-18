@@ -15,7 +15,7 @@ import { TokenSearchCriteriaByUser, TokenCriteriaSearchType } from '../dao/token
 export const getTokenInfo = (t: AuthToken<any>): TokenInfo => ({
     tokenKey: t.key,
     tokenValue: t.plainToken,
-    expire: moment(t.created).unix(),
+    expire: moment(t.expiry).unix(),
 });
 
 /**

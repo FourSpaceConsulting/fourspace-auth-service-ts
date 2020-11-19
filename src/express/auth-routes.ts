@@ -16,7 +16,7 @@ export const createAuthenticationRoutes = <PDTO>(
     routeAdapter: ApiRouteAdapter,
     authHandlers: AuthHandlers,
     validationHandlers: AuthValidationHandlers,
-    c: AuthController<PDTO>,
+    c: AuthController<PDTO>
 ): RouteConfiguration[] => {
     return [
         {

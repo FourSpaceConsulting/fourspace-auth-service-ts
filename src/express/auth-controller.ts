@@ -42,7 +42,7 @@ export class AuthControllerImpl<P, PDTO> implements AuthController<PDTO> {
 
     public async registerUser(r: ExpressLikeRequest): Promise<boolean> {
         // validate the request body
-        if (!await this._requestUserMapper.validateNewUser(r.body)) {
+        if (!(await this._requestUserMapper.validateNewUser(r.body))) {
             this._exceptionService.throwBadRequest('Invalid user');
         }
         // create the user
@@ -80,7 +80,6 @@ export class AuthControllerImpl<P, PDTO> implements AuthController<PDTO> {
         // map to the dto
         return this._requestUserMapper.mapToDto(principal);
     }
-
 
     public refreshToken(r: ExpressLikeRequest): Promise<AccessTokenResponse> {
         // get the refresh token from the security context

@@ -59,7 +59,11 @@ export class ValidationHandlersImpl implements AuthValidationHandlers {
     //#endregion
     //#region --- Create the handlers
 
-    private _setInitialUsernameAndPasswordHandler(ex: AuthExceptionService, isUsernameValid: Predicate, isPasswordValid: Predicate) {
+    private _setInitialUsernameAndPasswordHandler(
+        ex: AuthExceptionService,
+        isUsernameValid: Predicate,
+        isPasswordValid: Predicate
+    ) {
         this._validateInitialUsernameAndPassword = async (req, _, next) => {
             // validate
             const username = UsernameGetter(req);

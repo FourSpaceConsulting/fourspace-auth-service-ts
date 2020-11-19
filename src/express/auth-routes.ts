@@ -5,19 +5,18 @@ import { AuthHandlers } from './auth-handlers';
 import { AuthValidationHandlers } from './validation-handlers';
 
 type ApiRouteAdapter = (r: string) => string;
-
 /**
  * Create the authentication routes for the express server
  * @param routeAdapter
  * @param authHandlers
  * @param validationHandlers
- * @param c
+ * @param c controller
  */
-export const createAuthenticationRoutes = <P>(
+export const createAuthenticationRoutes = <PDTO>(
     routeAdapter: ApiRouteAdapter,
     authHandlers: AuthHandlers,
     validationHandlers: AuthValidationHandlers,
-    c: AuthController
+    c: AuthController<PDTO>,
 ): RouteConfiguration[] => {
     return [
         {
@@ -48,6 +47,16 @@ export const createAuthenticationRoutes = <P>(
                 authHandlers.authenticatePasswordClaim,
                 // perform action
                 Util.sendResult(r => c.logIn(r)),
+            ],
+        },
+        {
+            path: routeAdapter('/auth/user'),
+            method: ApiMethod.GET,
+            handler: [
+                // authenticate the login claim
+                authHandlers.authenticateAccessTokenClaim,
+                // perform action
+                Util.sendResult(r => c.getAuthenticatedUser(r)),
             ],
         },
         {

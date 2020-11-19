@@ -19,15 +19,17 @@ export interface AuthValidationHandlers {
     readonly validatePassword: ExpressLikeRequestHandler;
 }
 
+type Predicate = (s: string) => boolean;
+
 export class ValidationHandlersImpl implements AuthValidationHandlers {
     private _validateInitialUsernameAndPassword: ExpressLikeRequestHandler;
     private _validateUsername: ExpressLikeRequestHandler;
     private _validatePassword: ExpressLikeRequestHandler;
 
-    constructor(ex: AuthExceptionService) {
-        this._setInitialUsernameAndPasswordHandler(ex);
-        this._setUsernameHandler(ex);
-        this._setPasswordHandler(ex);
+    constructor(ex: AuthExceptionService, isUsernameValid: Predicate, isPasswordValid: Predicate) {
+        this._setInitialUsernameAndPasswordHandler(ex, isUsernameValid, isPasswordValid);
+        this._setUsernameHandler(ex, isUsernameValid);
+        this._setPasswordHandler(ex, isPasswordValid);
     }
 
     /**
@@ -57,12 +59,12 @@ export class ValidationHandlersImpl implements AuthValidationHandlers {
     //#endregion
     //#region --- Create the handlers
 
-    private _setInitialUsernameAndPasswordHandler(ex: AuthExceptionService) {
+    private _setInitialUsernameAndPasswordHandler(ex: AuthExceptionService, isUsernameValid: Predicate, isPasswordValid: Predicate) {
         this._validateInitialUsernameAndPassword = async (req, _, next) => {
             // validate
             const username = UsernameGetter(req);
             const password = PasswordGetter(req);
-            if (!isValidUsername(username) || !isValidUsername(password)) {
+            if (!isUsernameValid(username) || !isPasswordValid(password)) {
                 ex.throwBadRequest('Invalid username or password');
             }
             // next
@@ -70,30 +72,26 @@ export class ValidationHandlersImpl implements AuthValidationHandlers {
         };
     }
 
-    private _setUsernameHandler(ex: AuthExceptionService) {
+    private _setUsernameHandler(ex: AuthExceptionService, isUsernameValid: Predicate) {
         this._validateUsername = async (req, _, next) => {
             // validate
             const username = UsernameGetter(req);
-            if (!isValidUsername(username)) {
+            if (!isUsernameValid(username)) {
                 ex.throwBadRequest('Invalid username');
             }
             next();
         };
     }
 
-    private _setPasswordHandler(ex: AuthExceptionService) {
+    private _setPasswordHandler(ex: AuthExceptionService, isPasswordValid: Predicate) {
         this._validatePassword = async (req, _, next) => {
             // validate
             const password = PasswordGetter(req);
-            if (!isValidUsername(password)) {
+            if (!isPasswordValid(password)) {
                 ex.throwBadRequest('Invalid password');
             }
         };
     }
 
     //#endregion
-}
-
-function isValidUsername(username: string) {
-    return username != null && username.trim() !== '';
 }

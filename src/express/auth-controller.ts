@@ -9,27 +9,30 @@ import { ExpressLikeRequest } from './express-interface';
 /**
  * Controller for all authorisation action API requests
  */
-export interface AuthController {
+export interface AuthController<PDTO> {
     registerUser(r: ExpressLikeRequest): Promise<boolean>;
     verifyUser(r: ExpressLikeRequest): Promise<boolean>;
     logIn(r: ExpressLikeRequest): Promise<AccessTokenResponse>;
+    getAuthenticatedUser(r: ExpressLikeRequest): PDTO;
     refreshToken(r: ExpressLikeRequest): Promise<AccessTokenResponse>;
     logOut(r: ExpressLikeRequest): Promise<boolean>;
     requestPasswordReset(r: ExpressLikeRequest): Promise<boolean>;
     performPasswordReset(r: ExpressLikeRequest): Promise<boolean>;
 }
 
+type UserMapper<P, PDTO> = (p: P) => PDTO;
+
 /**
  * Implementation using the authentication service
  */
-export class AuthControllerImpl<P> implements AuthController {
+export class AuthControllerImpl<P, PDTO> implements AuthController<PDTO> {
     private readonly _authenticationService: AuthenticationService<P>;
-    private readonly _requestUserMapper: RequestUserMapper<P>;
+    private readonly _requestUserMapper: RequestUserMapper<P, PDTO>;
     private readonly _exceptionService: AuthExceptionService;
 
     constructor(
         authenticationService: AuthenticationService<P>,
-        requestUserMapper: RequestUserMapper<P>,
+        requestUserMapper: RequestUserMapper<P, PDTO>,
         exceptionService: AuthExceptionService
     ) {
         this._authenticationService = authenticationService;
@@ -38,10 +41,11 @@ export class AuthControllerImpl<P> implements AuthController {
     }
 
     public async registerUser(r: ExpressLikeRequest): Promise<boolean> {
-        // get the user from the request
-        if (!this._requestUserMapper.validateNewUser(r.body)) {
-            this._exceptionService.throwBadRequest('Invalid user object');
+        // validate the request body
+        if (!await this._requestUserMapper.validateNewUser(r.body)) {
+            this._exceptionService.throwBadRequest('Invalid user');
         }
+        // create the user
         const newPrincipal = this._requestUserMapper.createNewUser(r.body);
         const password = PasswordGetter(r);
         //
@@ -69,6 +73,14 @@ export class AuthControllerImpl<P> implements AuthController {
         // create the tokens for this principal
         return this._authenticationService.createAccessToken(principal);
     }
+
+    public getAuthenticatedUser(r: ExpressLikeRequest): PDTO {
+        // get the principal from the security context
+        const principal = getUserContextPrincipal<P>(r, this._exceptionService);
+        // map to the dto
+        return this._requestUserMapper.mapToDto(principal);
+    }
+
 
     public refreshToken(r: ExpressLikeRequest): Promise<AccessTokenResponse> {
         // get the refresh token from the security context

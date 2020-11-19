@@ -6,7 +6,8 @@
  * Creates the new user
  *
  */
-export interface RequestUserMapper<P> {
-    validateNewUser(obj: any): boolean;
+export interface RequestUserMapper<P, PDTO> {
+    validateNewUser(obj: any): Promise<boolean>;
     createNewUser(obj: any): P;
+    mapToDto(p: P): PDTO;
 }

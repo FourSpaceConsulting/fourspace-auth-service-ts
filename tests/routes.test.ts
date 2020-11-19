@@ -1,9 +1,5 @@
 import { AuthenticationServiceBuilder } from '../src/service/impl/authentication-service-builder';
-import { PrincipalDao } from '../src/dao/principal-dao';
-import { AuthToken, AuthTokenSecure, TokenType } from '../src/domain/auth-token';
 import { Principal } from '../src/domain/principal';
-import { createPasswordAuthClaim, createAccessTokenAuthClaim, createPasswordResetAuthClaim, createVerifyUserAuthClaim, createRefreshAccessTokenAuthClaim } from '../src/domain/auth-claim';
-import { TokenDao } from '../src/dao/token-dao';
 import { PrincipalDaoDemo } from '../src/dao/demo/principal-dao-demo';
 import { ActionMessageServiceDemo } from '../src/actions/demo/action-message-service-demo';
 import { ActionType } from '../src/domain/action-message';
@@ -25,9 +21,10 @@ describe('Test Server Routes', () => {
         throwInternalServer: jest.fn(),
         throwUnauthenticated: jest.fn(),
     }));
-    const RequestUserMapperMock = jest.fn<RequestUserMapper<Principal>, []>(() => ({
+    const RequestUserMapperMock = jest.fn<RequestUserMapper<Principal, Principal>, []>(() => ({
         createNewUser: jest.fn(b => { return { username: b.username } as Principal }),
-        validateNewUser: jest.fn().mockReturnValue(true)
+        validateNewUser: jest.fn().mockReturnValue(true),
+        mapToDto: jest.fn(p => p)
     }));
     // Mock the response
     const ResponseMocker = jest.fn<ExpressLikeResponse, [any[]]>(function (jsonList: any[]) {
@@ -41,12 +38,6 @@ describe('Test Server Routes', () => {
 
     test('Test register', async () => {
         // arrange
-        const username = 'testFullWorkflow@test.com';
-        const initialPassword = 'testpassword';
-        const newPassword = 'newpassword';
-        const testPrincipal = { username, encryptedPassword: '', isVerified: false };
-        const initialPasswordClaim = createPasswordAuthClaim(username, initialPassword);
-        const newPasswordClaim = createPasswordAuthClaim(username, newPassword);
         const actionMessageService = new ActionMessageServiceDemo();
         const principalDao = new PrincipalDaoDemo<Principal>([]);
         const tokenDao = new TokenDaoDemo();
@@ -58,9 +49,10 @@ describe('Test Server Routes', () => {
             .setPrincipalDao(principalDao)
             .setTokenDao(tokenDao)
             .buildAuthenticationService();
+        const validator = (s: string) => s != null && s.trim() !== '';
         const authHandlers: AuthHandlers = new AuthHandlerImpl(authenticationService, mockExceptionService);
-        const authController: AuthController = new AuthControllerImpl(authenticationService, mockUserMapper, mockExceptionService);
-        const validationHandlers: ValidationHandlersImpl = new ValidationHandlersImpl(mockExceptionService);
+        const authController: AuthController<any> = new AuthControllerImpl(authenticationService, mockUserMapper, mockExceptionService);
+        const validationHandlers: ValidationHandlersImpl = new ValidationHandlersImpl(mockExceptionService, validator, validator);
         const routes = createAuthenticationRoutes((s) => s, authHandlers, validationHandlers, authController);
         const routeMap: Map<string, RouteConfiguration> = routes.reduce((m, o) => { m.set(o.path, o); return m; }, new Map());
         // act and assert

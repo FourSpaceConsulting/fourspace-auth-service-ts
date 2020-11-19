@@ -3,6 +3,7 @@ export enum TokenType {
     AccessToken,
     RefreshToken,
     PasswordResetToken,
+    RememberMeToken
 }
 
 export interface AuthTokenSecure<P> {
